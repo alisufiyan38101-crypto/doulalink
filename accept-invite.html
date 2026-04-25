@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accept Invitation — DoulaLink</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose: #F4978E; --rose-dark: #e07268; --rose-pale: #FFF0EE;
+      --cream: #FFF8F5; --ink: #2C2C2E; --sub: #636366;
+      --muted: #8E8E93; --border: #E8DDD9; --white: #ffffff;
+      --green: #34C759; --green-pale: #F0FBF3;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--cream);
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; padding: 20px;
+    }
+    body::before {
+      content: ''; position: fixed; top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(244,151,142,.15) 0%, transparent 60%);
+      border-radius: 50%; pointer-events: none;
+    }
+
+    .card {
+      background: var(--white); border-radius: 28px;
+      box-shadow: 0 24px 64px rgba(244,151,142,.18), 0 4px 16px rgba(44,44,46,.06);
+      width: 100%; max-width: 440px; overflow: hidden;
+      animation: rise .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(28px) scale(.97); } to { opacity: 1; transform: none; } }
+
+    .brand {
+      background: var(--rose); padding: 28px 36px 24px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .brand::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 160px; height: 160px; background: rgba(255,255,255,.08); border-radius: 50%;
+    }
+    .brand h1 {
+      font-family: 'DM Serif Display', serif; font-size: 28px;
+      color: #fff; position: relative; z-index: 1;
+    }
+    .brand h1 em { font-style: italic; opacity: .88; }
+    .brand p { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 4px; position: relative; z-index: 1; }
+
+    .screen { display: none; padding: 32px 28px; }
+    .screen.active { display: block; }
+
+    /* Verifying */
+    #s-verifying { text-align: center; padding: 44px 28px; }
+    .verify-ring {
+      width: 68px; height: 68px; border-radius: 50%;
+      border: 4px solid rgba(244,151,142,.2); border-top-color: var(--rose);
+      animation: spin .85s linear infinite; margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .verify-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+    .verify-sub { font-size: 13.5px; color: var(--muted); margin-bottom: 24px; }
+    .steps { list-style: none; text-align: left; }
+    .steps li {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 13.5px; color: var(--muted);
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      transition: color .3s;
+    }
+    .steps li:last-child { border-bottom: none; }
+    .steps li.done { color: var(--ink); }
+    .dot {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      background: var(--cream); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; transition: all .3s;
+    }
+    .dot.active { background: var(--rose); border-color: var(--rose); color: #fff; animation: pulse .8s ease-in-out infinite alternate; }
+    .dot.done { background: var(--green); border-color: var(--green); color: #fff; animation: none; }
+    @keyframes pulse { from { opacity: 1; } to { opacity: .5; } }
+
+    /* Form screen */
+    #s-form { padding: 0; }
+    .invite-card {
+      margin: 24px 28px 0;
+      background: var(--rose-pale);
+      border: 1.5px solid rgba(244,151,142,.28);
+      border-radius: 16px; padding: 18px 20px; text-align: center;
+    }
+    .invite-card .ic-tag {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      letter-spacing: .5px; text-transform: uppercase;
+      color: var(--rose); background: rgba(244,151,142,.15);
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
+    }
+    .invite-card .ic-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px; color: var(--ink); margin-bottom: 4px;
+    }
+    .invite-card .ic-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .invite-card .ic-sub strong { color: var(--rose); }
+
+    .toggle-wrap { padding: 18px 28px 0; }
+    .toggle {
+      display: flex; background: var(--cream); border-radius: 13px;
+      padding: 4px; gap: 4px; border: 1.5px solid var(--border);
+    }
+    .toggle-btn {
+      flex: 1; padding: 10px 6px; border: none; background: transparent;
+      border-radius: 10px; font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all .25s;
+    }
+    .toggle-btn.active { background: var(--rose); color: #fff; box-shadow: 0 4px 12px rgba(244,151,142,.35); }
+
+    .form-panels { padding: 20px 28px 28px; }
+    .form-panel { display: none; }
+    .form-panel.active { display: block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+    .form-heading { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 3px; }
+    .form-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 600;
+      letter-spacing: .5px; text-transform: uppercase;
+      color: var(--sub); margin-bottom: 5px;
+    }
+    input[type=text], input[type=email], input[type=password] {
+      width: 100%; padding: 11px 13px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: var(--ink); background: var(--cream); outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    input:focus { border-color: var(--rose); background: #fff; box-shadow: 0 0 0 3px rgba(244,151,142,.13); }
+    input::placeholder { color: #BFB5B1; }
+    input:disabled { color: var(--muted); background: #f5eeec; cursor: not-allowed; }
+
+    .locked-note { font-size: 11px; color: var(--rose); margin-top: 3px; font-weight: 500; display: none; }
+
+    .field-row { display: flex; gap: 12px; }
+    .field-row .field { flex: 1; }
+
+    /* Role cards */
+    .role-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .role-card {
+      flex: 1; border: 2px solid var(--border); border-radius: 14px;
+      padding: 14px 10px; text-align: center; cursor: pointer; transition: all .2s;
+      background: var(--cream);
+    }
+    .role-card:hover:not(.locked) { border-color: var(--rose); background: var(--rose-pale); }
+    .role-card.selected { border-color: var(--rose); background: var(--rose-pale); }
+    .role-card.locked { opacity: .5; cursor: not-allowed; pointer-events: none; }
+    .role-name { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+    .role-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .error-box {
+      background: #FFF0EE; border: 1.5px solid rgba(244,151,142,.4);
+      border-radius: 11px; padding: 11px 13px; font-size: 13px; color: #c0392b;
+      margin-bottom: 14px; display: none; animation: fadeIn .2s ease;
+    }
+    .error-box.show { display: block; }
+
+    .btn-submit {
+      width: 100%; padding: 14px; background: var(--rose); color: #fff;
+      border: none; border-radius: 13px; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 5px 20px rgba(244,151,142,.4);
+      transition: background .2s, transform .15s;
+    }
+    .btn-submit:hover { background: var(--rose-dark); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .switch-text { text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+    .switch-text button { background: none; border: none; color: var(--rose); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+    /* Success */
+    #s-success { text-align: center; }
+    .success-circle {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: var(--green-pale); border: 2.5px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px;
+      animation: popIn .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes popIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+    .checkmark {
+      width: 36px; height: 36px; stroke: var(--green);
+      stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 60; stroke-dashoffset: 60;
+      animation: draw .5s .3s ease forwards;
+    }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    .success-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--ink); margin-bottom: 8px; }
+    .success-body { font-size: 14.5px; color: var(--muted); line-height: 1.65; margin-bottom: 28px; }
+    .store-row { display: flex; gap: 10px; }
+    .store-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      gap: 7px; background: var(--ink); color: #fff; text-decoration: none;
+      padding: 13px 10px; border-radius: 13px; font-size: 13.5px; font-weight: 700;
+      transition: opacity .2s;
+    }
+    .store-btn:hover { opacity: .85; }
+
+    /* Error */
+    #s-error { text-align: center; }
+    .err-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); margin-bottom: 8px; margin-top: 16px; }
+    .err-body { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .err-icon-wrap {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #FFF0EE; border: 2px solid rgba(244,151,142,.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto;
+    }
+    .err-icon-wrap svg { width: 32px; height: 32px; stroke: var(--rose); fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+    @media (max-width: 480px) {
+      .brand { padding: 22px 20px 18px; }
+      .screen { padding: 24px 20px; }
+      .invite-card, .toggle-wrap, .form-panels { padding-left: 20px; padding-right: 20px; }
+      .invite-card { margin-left: 20px; margin-right: 20px; }
+      .field-row { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand">
+    <h1>Doula<em>Link</em></h1>
+    <p>Connection Invitation</p>
+  </div>
+
+  <!-- Verifying -->
+  <div class="screen active" id="s-verifying">
+    <div class="verify-ring"></div>
+    <div class="verify-title">Verifying your invite...</div>
+    <div class="verify-sub">Checking your secure token with Supabase</div>
+    <ul class="steps">
+      <li id="step-1"><div class="dot active" id="dot-1">1</div> Reading invite token from link</li>
+      <li id="step-2"><div class="dot" id="dot-2">2</div> Validating token in database</li>
+      <li id="step-3"><div class="dot" id="dot-3">3</div> Checking token expiry and status</li>
+      <li id="step-4"><div class="dot" id="dot-4">4</div> Loading your invite details</li>
+    </ul>
+  </div>
+
+  <!-- Form -->
+  <div class="screen" id="s-form">
+    <div class="invite-card">
+      <div class="ic-tag" id="ic-tag">Invitation</div>
+      <div class="ic-name" id="ic-name">You have been invited!</div>
+      <div class="ic-sub" id="ic-sub">Sign in or create an account to accept.</div>
+    </div>
+    <div class="toggle-wrap">
+      <div class="toggle">
+        <button class="toggle-btn active" id="tbtn-login" onclick="switchTab('login')">Sign In</button>
+        <button class="toggle-btn" id="tbtn-signup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+    </div>
+    <div class="form-panels">
+
+      <!-- Login -->
+      <div class="form-panel active" id="fp-login">
+        <div class="form-heading">Sign in to accept</div>
+        <div class="form-sub">Use your existing DoulaLink account.</div>
+        <div class="error-box" id="login-err"></div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="login-pw" placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <button class="btn-submit" id="login-btn" onclick="handleLogin()">Sign In and Accept</button>
+        <div class="switch-text">No account? <button onclick="switchTab('signup')">Create one</button></div>
+      </div>
+
+      <!-- Signup -->
+      <div class="form-panel" id="fp-signup">
+        <div class="form-heading">Create your account</div>
+        <div class="form-sub">New to DoulaLink? Set up your account to accept this connection.</div>
+        <div class="error-box" id="signup-err"></div>
+        <div class="field">
+          <label>I am a...</label>
+          <div class="role-row">
+            <div class="role-card" id="role-parent" onclick="selectRole('parent')">
+              <div class="role-name">Parent</div>
+              <div class="role-desc">Family / expecting</div>
+            </div>
+            <div class="role-card" id="role-professional" onclick="selectRole('professional')">
+              <div class="role-name">Professional</div>
+              <div class="role-desc">Doula / caregiver</div>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>First Name</label><input type="text" id="su-fname" placeholder="First" /></div>
+          <div class="field"><label>Last Name</label><input type="text" id="su-lname" placeholder="Last" /></div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="su-email" placeholder="your@email.com" autocomplete="email" />
+          <div class="locked-note" id="su-locked-note">Locked to invited email address</div>
+        </div>
+        <div class="field"><label>Password</label><input type="password" id="su-pw" placeholder="Min. 6 characters" /></div>
+        <div class="field"><label>Confirm Password</label><input type="password" id="su-pw2" placeholder="Re-enter password" /></div>
+        <button class="btn-submit" id="signup-btn" onclick="handleSignup()">Create Account and Accept</button>
+        <div class="switch-text">Already have an account? <button onclick="switchTab('login')">Sign in</button></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div class="screen" id="s-success">
+    <div class="success-circle">
+      <svg class="checkmark" viewBox="0 0 52 52"><polyline points="14,27 22,35 38,17"/></svg>
+    </div>
+    <div class="success-title">You are Connected!</div>
+    <div class="success-body" id="success-body">You are now connected on DoulaLink. Open the app to get started.</div>
+    <div class="store-row">
+      <a href="https://apps.apple.com/app/doulalink" class="store-btn">App Store</a>
+      <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" class="store-btn">Google Play</a>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="screen" id="s-error">
+    <div class="err-icon-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="err-title" id="err-title">Something went wrong</div>
+    <div class="err-body" id="err-body">Please try again or contact support.</div>
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const token = new URLSearchParams(location.search).get('token');
+  let inviteRow = null;
+  let selectedRole = null;
+
+  const SCREENS = ['s-verifying','s-form','s-success','s-error'];
+  function showScreen(id) { SCREENS.forEach(s => document.getElementById(s).classList.toggle('active', s === id)); }
+  function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
+  function hideErr(id) { const el = document.getElementById(id); el.textContent = ''; el.classList.remove('show'); }
+  function setBtn(id, loading, label) { const b = document.getElementById(id); b.disabled = loading; b.textContent = loading ? 'Please wait...' : label; }
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function stepDone(n) {
+    const dot = document.getElementById('dot-' + n);
+    dot.textContent = '✓'; dot.classList.remove('active'); dot.classList.add('done');
+    document.getElementById('step-' + n).classList.add('done');
+    if (n < 4) document.getElementById('dot-' + (n + 1)).classList.add('active');
+  }
+
+  function switchTab(tab) {
+    ['login','signup'].forEach(t => {
+      document.getElementById('fp-' + t).classList.toggle('active', t === tab);
+      document.getElementById('tbtn-' + t).classList.toggle('active', t === tab);
+    });
+    hideErr('login-err'); hideErr('signup-err');
+  }
+
+  function selectRole(r) {
+    if (document.getElementById('role-' + r).classList.contains('locked')) return;
+    selectedRole = r;
+    ['parent','professional'].forEach(id =>
+      document.getElementById('role-' + id).classList.toggle('selected', id === r)
+    );
+  }
+
+  function errScreen(title, body) {
+    document.getElementById('err-title').textContent = title;
+    document.getElementById('err-body').textContent = body;
+    showScreen('s-error');
+  }
+
+  async function init() {
+    await delay(300); stepDone(1); await delay(400);
+
+    if (!token) { errScreen('Missing Token', 'This invite link is missing the required token. Please use the original link from your email.'); return; }
+
+    stepDone(2); await delay(400);
+
+    let row;
+    try {
+      const { data, error } = await sb.rpc('validate_invite_token', { p_token: token });
+      if (error || !data || data.length === 0) { errScreen('Token Not Found', 'This invite link is invalid or does not exist. Please check your email for the correct link.'); return; }
+      row = data[0];
+    } catch (e) { errScreen('Connection Error', 'Could not reach the server. Please check your connection and try again.'); return; }
+
+    stepDone(3); await delay(400);
+
+    if (!row.is_valid) {
+      if (row.error_reason === 'already_accepted') errScreen('Already Accepted', 'This invite has already been used. Download the app and sign in to access your connections.');
+      else if (row.error_reason === 'expired') errScreen('Link Expired', 'This invite link has expired. Please ask the sender to resend a fresh invitation.');
+      else errScreen('Invalid Invite', 'This invitation is no longer valid. Please request a new one.');
+      return;
+    }
+
+    stepDone(4); await delay(400);
+    inviteRow = row;
+
+    document.getElementById('ic-name').textContent = row.inviter_name ? (row.inviter_name + ' invited you!') : 'You have been invited!';
+    document.getElementById('ic-sub').innerHTML = row.inviter_name
+      ? ('<strong>' + row.inviter_name + '</strong> wants to connect with you on DoulaLink.')
+      : 'Someone has invited you to connect on DoulaLink.';
+    document.getElementById('ic-tag').textContent = row.type === 'professional' ? 'Professional Invite' : 'Family Invite';
+
+    if (row.invited_email) {
+      document.getElementById('login-email').value = row.invited_email;
+      document.getElementById('login-email').disabled = true;
+      document.getElementById('su-email').value = row.invited_email;
+      document.getElementById('su-email').disabled = true;
+      document.getElementById('su-locked-note').style.display = 'block';
+    }
+    if (row.invited_name) {
+      const parts = row.invited_name.trim().split(' ');
+      document.getElementById('su-fname').value = parts[0] || '';
+      document.getElementById('su-lname').value = parts.slice(1).join(' ') || '';
+    }
+    if (row.inviter_role === 'professional') { selectRole('parent'); document.getElementById('role-professional').classList.add('locked'); }
+    else if (row.inviter_role === 'parent') { selectRole('professional'); document.getElementById('role-parent').classList.add('locked'); }
+
+    showScreen('s-form');
+  }
+
+  async function handleLogin() {
+    hideErr('login-err');
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const pw = document.getElementById('login-pw').value;
+    if (!email || !pw) { showErr('login-err', 'Please enter your email and password.'); return; }
+    if (inviteRow && inviteRow.invited_email && email !== inviteRow.invited_email.toLowerCase()) {
+      showErr('login-err', 'This invite was sent to ' + inviteRow.invited_email + '. Please sign in with that email.'); return;
+    }
+    setBtn('login-btn', true, 'Sign In and Accept');
+    const { data: auth, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) { showErr('login-err', error.message); setBtn('login-btn', false, 'Sign In and Accept'); return; }
+    await acceptInvite(auth.user.id);
+    setBtn('login-btn', false, 'Sign In and Accept');
+  }
+
+  async function handleSignup() {
+    hideErr('signup-err');
+    const fn = document.getElementById('su-fname').value.trim();
+    const ln = document.getElementById('su-lname').value.trim();
+    const em = document.getElementById('su-email').value.trim().toLowerCase();
+    const pw = document.getElementById('su-pw').value;
+    const p2 = document.getElementById('su-pw2').value;
+    if (!fn || !ln || !em || !pw || !p2) { showErr('signup-err', 'Please fill in all fields.'); return; }
+    if (!selectedRole) { showErr('signup-err', 'Please select your role above.'); return; }
+    if (pw.length < 6) { showErr('signup-err', 'Password must be at least 6 characters.'); return; }
+    if (pw !== p2) { showErr('signup-err', 'Passwords do not match.'); return; }
+    setBtn('signup-btn', true, 'Create Account and Accept');
+    const { data: auth, error } = await sb.auth.signUp({ email: em, password: pw });
+    if (error) { showErr('signup-err', error.message); setBtn('signup-btn', false, 'Create Account and Accept'); return; }
+    await sb.from('profiles').upsert({ id: auth.user.id, email: em, first_name: fn, last_name: ln, role: selectedRole }, { onConflict: 'id' });
+    await acceptInvite(auth.user.id);
+    setBtn('signup-btn', false, 'Create Account and Accept');
+  }
+
+  async function acceptInvite(userId) {
+    try {
+      await sb.from('invitations').update({ status: 'accepted', accepted_at: new Date().toISOString(), accepted_by: userId }).eq('token', token).eq('status', 'pending');
+      await sb.from('connections').insert({ user_id: inviteRow.invited_by, connected_user_id: userId, connection_type: inviteRow.type || 'general', status: 'active' });
+      const name = inviteRow.inviter_name || 'your contact';
+      document.getElementById('success-body').innerHTML = 'You are now connected with <strong>' + name + '</strong> on DoulaLink. Open the app to get started.';
+      showScreen('s-success');
+    } catch (err) {
+      showErr('login-err', 'Could not accept invitation: ' + (err.message || 'Unknown error'));
+      showErr('signup-err', 'Could not accept invitation: ' + (err.message || 'Unknown error'));
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
