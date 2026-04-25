@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoulaLink — Sign In</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --rose: #F4978E; --rose-dark: #e07268; --rose-pale: #FFF0EE;
+      --cream: #FFF8F5; --ink: #2C2C2E; --sub: #636366;
+      --muted: #8E8E93; --border: #E8DDD9; --white: #ffffff;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--cream);
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; padding: 20px;
+    }
+    body::before {
+      content: ''; position: fixed; top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(244,151,142,.15) 0%, transparent 60%);
+      border-radius: 50%; pointer-events: none;
+    }
+    body::after {
+      content: ''; position: fixed; bottom: -150px; left: -150px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(244,151,142,.10) 0%, transparent 60%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .card {
+      background: var(--white); border-radius: 28px;
+      box-shadow: 0 24px 64px rgba(244,151,142,.18), 0 4px 16px rgba(44,44,46,.06);
+      width: 100%; max-width: 420px; overflow: hidden;
+      animation: rise .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(28px) scale(.97); } to { opacity: 1; transform: none; } }
+    .brand {
+      background: var(--rose); padding: 36px 36px 30px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .brand::before {
+      content: ''; position: absolute; top: -50px; right: -50px;
+      width: 180px; height: 180px; background: rgba(255,255,255,.08); border-radius: 50%;
+    }
+    .brand::after {
+      content: ''; position: absolute; bottom: -40px; left: -40px;
+      width: 140px; height: 140px; background: rgba(255,255,255,.06); border-radius: 50%;
+    }
+    .brand h1 {
+      font-family: 'DM Serif Display', serif; font-size: 34px;
+      color: #fff; position: relative; z-index: 1; margin-bottom: 6px;
+    }
+    .brand h1 em { font-style: italic; opacity: .88; }
+    .brand p { font-size: 13.5px; color: rgba(255,255,255,.78); position: relative; z-index: 1; line-height: 1.5; }
+
+    .body { padding: 32px 28px 36px; }
+    .heading { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); margin-bottom: 4px; }
+    .sub-text { font-size: 13.5px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block; font-size: 11.5px; font-weight: 600;
+      letter-spacing: .5px; text-transform: uppercase;
+      color: var(--sub); margin-bottom: 6px;
+    }
+    .pw-wrap { position: relative; }
+    input[type=text], input[type=email], input[type=password] {
+      width: 100%; padding: 13px 14px;
+      border: 1.5px solid var(--border); border-radius: 13px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      color: var(--ink); background: var(--cream); outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    input:focus { border-color: var(--rose); background: #fff; box-shadow: 0 0 0 3.5px rgba(244,151,142,.14); }
+    input::placeholder { color: #BFB5B1; }
+    .eye-btn {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--muted); transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--ink); }
+    .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    .forgot {
+      display: block; text-align: right; font-size: 12.5px;
+      color: var(--rose); font-weight: 600; text-decoration: none;
+      margin-top: -10px; margin-bottom: 24px; transition: opacity .2s;
+    }
+    .forgot:hover { opacity: .7; }
+
+    .error-box {
+      background: #FFF0EE; border: 1.5px solid rgba(244,151,142,.4);
+      border-radius: 11px; padding: 12px 14px; font-size: 13px; color: #c0392b;
+      margin-bottom: 18px; display: none;
+    }
+    .error-box.show { display: block; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    .btn {
+      width: 100%; padding: 15px; background: var(--rose); color: #fff;
+      border: none; border-radius: 13px; font-family: 'DM Sans', sans-serif;
+      font-size: 15.5px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 22px rgba(244,151,142,.4);
+      transition: background .2s, transform .15s, box-shadow .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:hover:not(:disabled) { background: var(--rose-dark); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(244,151,142,.48); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn-spinner {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff;
+      animation: spin .7s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .divider span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+    .create-acc-box {
+      border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px;
+      text-align: center; transition: border-color .2s, background .2s;
+      text-decoration: none; display: block;
+      background: var(--cream);
+    }
+    .create-acc-box:hover { border-color: var(--rose); background: var(--rose-pale); }
+    .create-acc-box .ca-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .create-acc-box .ca-action { font-size: 15px; font-weight: 700; color: var(--rose); }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--ink); color: #fff; padding: 12px 24px;
+      border-radius: 40px; font-size: 14px; font-weight: 600;
+      box-shadow: 0 8px 28px rgba(0,0,0,.2); transition: transform .4s cubic-bezier(.22,1,.36,1);
+      z-index: 999; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 480px) {
+      .brand { padding: 28px 22px 24px; }
+      .body { padding: 26px 22px 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand">
+    <h1>Doula<em>Link</em></h1>
+    <p>Connecting doulas with the<br>families they support</p>
+  </div>
+
+  <div class="body">
+    <div class="heading">Welcome back</div>
+    <div class="sub-text">Sign in to your DoulaLink account to continue.</div>
+
+    <div class="error-box" id="error-box"></div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="password" placeholder="Your password" autocomplete="current-password" />
+        <button class="eye-btn" type="button" onclick="toggleEye()">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <a href="reset-password.html" class="forgot">Forgot password?</a>
+
+    <button class="btn" id="login-btn" onclick="handleLogin()">
+      <span id="btn-label">Sign In</span>
+      <div class="btn-spinner" id="btn-spinner"></div>
+    </button>
+
+    <div class="divider"><span>Don't have an account?</span></div>
+
+    <a href="signup.html" class="create-acc-box">
+      <div class="ca-label">New to DoulaLink?</div>
+      <div class="ca-action">Create Account</div>
+    </a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  function toggleEye() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function showError(msg) { const el = document.getElementById('error-box'); el.textContent = msg; el.classList.add('show'); }
+  function hideError() { const el = document.getElementById('error-box'); el.textContent = ''; el.classList.remove('show'); }
+  function setLoading(on) {
+    document.getElementById('login-btn').disabled = on;
+    document.getElementById('btn-label').style.display = on ? 'none' : 'inline';
+    document.getElementById('btn-spinner').style.display = on ? 'block' : 'none';
+  }
+  function toast(msg) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  async function handleLogin() {
+    hideError();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const pw = document.getElementById('password').value;
+    if (!email || !pw) { showError('Please enter your email and password.'); return; }
+    setLoading(true);
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) { showError(error.message); setLoading(false); return; }
+    toast('Signed in successfully!');
+    setLoading(false);
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+</script>
+</body>
+</html>
