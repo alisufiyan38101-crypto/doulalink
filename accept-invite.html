@@ -8,14 +8,12 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --rose: #F4978E; --rose-dark: #e07268; --rose-pale: #FFF0EE;
       --cream: #FFF8F5; --ink: #2C2C2E; --sub: #636366;
       --muted: #8E8E93; --border: #E8DDD9; --white: #ffffff;
       --green: #34C759; --green-pale: #F0FBF3;
     }
-
     body {
       font-family: 'DM Sans', sans-serif; background: var(--cream);
       min-height: 100vh; display: flex; align-items: center;
@@ -27,7 +25,6 @@
       background: radial-gradient(circle, rgba(244,151,142,.15) 0%, transparent 60%);
       border-radius: 50%; pointer-events: none;
     }
-
     .card {
       background: var(--white); border-radius: 28px;
       box-shadow: 0 24px 64px rgba(244,151,142,.18), 0 4px 16px rgba(44,44,46,.06);
@@ -35,7 +32,6 @@
       animation: rise .5s cubic-bezier(.22,1,.36,1) both;
     }
     @keyframes rise { from { opacity: 0; transform: translateY(28px) scale(.97); } to { opacity: 1; transform: none; } }
-
     .brand {
       background: var(--rose); padding: 28px 36px 24px;
       text-align: center; position: relative; overflow: hidden;
@@ -44,10 +40,7 @@
       content: ''; position: absolute; top: -40px; right: -40px;
       width: 160px; height: 160px; background: rgba(255,255,255,.08); border-radius: 50%;
     }
-    .brand h1 {
-      font-family: 'DM Serif Display', serif; font-size: 28px;
-      color: #fff; position: relative; z-index: 1;
-    }
+    .brand h1 { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; position: relative; z-index: 1; }
     .brand h1 em { font-style: italic; opacity: .88; }
     .brand p { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 4px; position: relative; z-index: 1; }
 
@@ -68,8 +61,7 @@
     .steps li {
       display: flex; align-items: center; gap: 12px;
       font-size: 13.5px; color: var(--muted);
-      padding: 8px 0; border-bottom: 1px solid var(--border);
-      transition: color .3s;
+      padding: 8px 0; border-bottom: 1px solid var(--border); transition: color .3s;
     }
     .steps li:last-child { border-bottom: none; }
     .steps li.done { color: var(--ink); }
@@ -87,8 +79,7 @@
     #s-form { padding: 0; }
     .invite-card {
       margin: 24px 28px 0;
-      background: var(--rose-pale);
-      border: 1.5px solid rgba(244,151,142,.28);
+      background: var(--rose-pale); border: 1.5px solid rgba(244,151,142,.28);
       border-radius: 16px; padding: 18px 20px; text-align: center;
     }
     .invite-card .ic-tag {
@@ -97,10 +88,7 @@
       color: var(--rose); background: rgba(244,151,142,.15);
       padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
     }
-    .invite-card .ic-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px; color: var(--ink); margin-bottom: 4px;
-    }
+    .invite-card .ic-name { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 4px; }
     .invite-card .ic-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
     .invite-card .ic-sub strong { color: var(--rose); }
 
@@ -126,11 +114,7 @@
     .form-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
 
     .field { margin-bottom: 14px; }
-    .field label {
-      display: block; font-size: 11px; font-weight: 600;
-      letter-spacing: .5px; text-transform: uppercase;
-      color: var(--sub); margin-bottom: 5px;
-    }
+    .field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--sub); margin-bottom: 5px; }
     input[type=text], input[type=email], input[type=password] {
       width: 100%; padding: 11px 13px;
       border: 1.5px solid var(--border); border-radius: 12px;
@@ -141,13 +125,11 @@
     input:focus { border-color: var(--rose); background: #fff; box-shadow: 0 0 0 3px rgba(244,151,142,.13); }
     input::placeholder { color: #BFB5B1; }
     input:disabled { color: var(--muted); background: #f5eeec; cursor: not-allowed; }
-
     .locked-note { font-size: 11px; color: var(--rose); margin-top: 3px; font-weight: 500; display: none; }
 
     .field-row { display: flex; gap: 12px; }
     .field-row .field { flex: 1; }
 
-    /* Role cards */
     .role-row { display: flex; gap: 10px; margin-bottom: 16px; }
     .role-card {
       flex: 1; border: 2px solid var(--border); border-radius: 14px;
@@ -173,9 +155,15 @@
       font-size: 15px; font-weight: 700; cursor: pointer;
       box-shadow: 0 5px 20px rgba(244,151,142,.4);
       transition: background .2s, transform .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .btn-submit:hover { background: var(--rose-dark); transform: translateY(-1px); }
     .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-spinner {
+      width: 17px; height: 17px; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff;
+      animation: spin .7s linear infinite; display: none;
+    }
 
     .switch-text { text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
     .switch-text button { background: none; border: none; color: var(--rose); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -190,12 +178,7 @@
       animation: popIn .5s cubic-bezier(.22,1,.36,1) both;
     }
     @keyframes popIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
-    .checkmark {
-      width: 36px; height: 36px; stroke: var(--green);
-      stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round;
-      stroke-dasharray: 60; stroke-dashoffset: 60;
-      animation: draw .5s .3s ease forwards;
-    }
+    .checkmark { width: 36px; height: 36px; stroke: var(--green); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 60; stroke-dashoffset: 60; animation: draw .5s .3s ease forwards; }
     @keyframes draw { to { stroke-dashoffset: 0; } }
     .success-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--ink); margin-bottom: 8px; }
     .success-body { font-size: 14.5px; color: var(--muted); line-height: 1.65; margin-bottom: 28px; }
@@ -215,8 +198,7 @@
     .err-icon-wrap {
       width: 72px; height: 72px; border-radius: 50%;
       background: #FFF0EE; border: 2px solid rgba(244,151,142,.3);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto;
     }
     .err-icon-wrap svg { width: 32px; height: 32px; stroke: var(--rose); fill: none; stroke-width: 2.5; stroke-linecap: round; }
 
@@ -230,7 +212,6 @@
   </style>
 </head>
 <body>
-
 <div class="card">
   <div class="brand">
     <h1>Doula<em>Link</em></h1>
@@ -278,7 +259,10 @@
           <label>Password</label>
           <input type="password" id="login-pw" placeholder="Your password" autocomplete="current-password" />
         </div>
-        <button class="btn-submit" id="login-btn" onclick="handleLogin()">Sign In and Accept</button>
+        <button class="btn-submit" id="login-btn" onclick="handleLogin()">
+          <span id="login-btn-label">Sign In and Accept</span>
+          <div class="btn-spinner" id="login-spinner"></div>
+        </button>
         <div class="switch-text">No account? <button onclick="switchTab('signup')">Create one</button></div>
       </div>
 
@@ -311,7 +295,10 @@
         </div>
         <div class="field"><label>Password</label><input type="password" id="su-pw" placeholder="Min. 6 characters" /></div>
         <div class="field"><label>Confirm Password</label><input type="password" id="su-pw2" placeholder="Re-enter password" /></div>
-        <button class="btn-submit" id="signup-btn" onclick="handleSignup()">Create Account and Accept</button>
+        <button class="btn-submit" id="signup-btn" onclick="handleSignup()">
+          <span id="signup-btn-label">Create Account and Accept</span>
+          <div class="btn-spinner" id="signup-spinner"></div>
+        </button>
         <div class="switch-text">Already have an account? <button onclick="switchTab('login')">Sign in</button></div>
       </div>
 
@@ -324,7 +311,7 @@
       <svg class="checkmark" viewBox="0 0 52 52"><polyline points="14,27 22,35 38,17"/></svg>
     </div>
     <div class="success-title">You are Connected!</div>
-    <div class="success-body" id="success-body">You are now connected on DoulaLink. Open the app to get started.</div>
+    <div class="success-body" id="success-body">You are now connected on DoulaLink. Open the app to start chatting!</div>
     <div class="store-row">
       <a href="https://apps.apple.com/app/doulalink" class="store-btn">App Store</a>
       <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" class="store-btn">Google Play</a>
@@ -355,7 +342,11 @@
   function showScreen(id) { SCREENS.forEach(s => document.getElementById(s).classList.toggle('active', s === id)); }
   function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
   function hideErr(id) { const el = document.getElementById(id); el.textContent = ''; el.classList.remove('show'); }
-  function setBtn(id, loading, label) { const b = document.getElementById(id); b.disabled = loading; b.textContent = loading ? 'Please wait...' : label; }
+  function setBtn(id, spinnerId, loading, label) {
+    document.getElementById(id).disabled = loading;
+    document.getElementById(id + '-label').style.display = loading ? 'none' : 'inline';
+    document.getElementById(spinnerId).style.display = loading ? 'block' : 'none';
+  }
   function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   function stepDone(n) {
@@ -390,30 +381,45 @@
   async function init() {
     await delay(300); stepDone(1); await delay(400);
 
-    if (!token) { errScreen('Missing Token', 'This invite link is missing the required token. Please use the original link from your email.'); return; }
+    if (!token) {
+      errScreen('Missing Token', 'This invite link is missing the required token. Please use the original link from your email.');
+      return;
+    }
 
     stepDone(2); await delay(400);
 
     let row;
     try {
       const { data, error } = await sb.rpc('validate_invite_token', { p_token: token });
-      if (error || !data || data.length === 0) { errScreen('Token Not Found', 'This invite link is invalid or does not exist. Please check your email for the correct link.'); return; }
+      if (error || !data || data.length === 0) {
+        errScreen('Token Not Found', 'This invite link is invalid or does not exist. Please check your email for the correct link.');
+        return;
+      }
       row = data[0];
-    } catch (e) { errScreen('Connection Error', 'Could not reach the server. Please check your connection and try again.'); return; }
+    } catch (e) {
+      errScreen('Connection Error', 'Could not reach the server. Please check your connection and try again.');
+      return;
+    }
 
     stepDone(3); await delay(400);
 
     if (!row.is_valid) {
-      if (row.error_reason === 'already_accepted') errScreen('Already Accepted', 'This invite has already been used. Download the app and sign in to access your connections.');
-      else if (row.error_reason === 'expired') errScreen('Link Expired', 'This invite link has expired. Please ask the sender to resend a fresh invitation.');
-      else errScreen('Invalid Invite', 'This invitation is no longer valid. Please request a new one.');
+      if (row.error_reason === 'already_accepted') {
+        errScreen('Already Accepted', 'This invite has already been used. Download the app and sign in to access your connections.');
+      } else if (row.error_reason === 'expired') {
+        errScreen('Link Expired', 'This invite link has expired. Please ask the sender to resend a fresh invitation.');
+      } else {
+        errScreen('Invalid Invite', 'This invitation is no longer valid. Please request a new one.');
+      }
       return;
     }
 
     stepDone(4); await delay(400);
     inviteRow = row;
 
-    document.getElementById('ic-name').textContent = row.inviter_name ? (row.inviter_name + ' invited you!') : 'You have been invited!';
+    document.getElementById('ic-name').textContent = row.inviter_name
+      ? (row.inviter_name + ' invited you!')
+      : 'You have been invited!';
     document.getElementById('ic-sub').innerHTML = row.inviter_name
       ? ('<strong>' + row.inviter_name + '</strong> wants to connect with you on DoulaLink.')
       : 'Someone has invited you to connect on DoulaLink.';
@@ -431,8 +437,13 @@
       document.getElementById('su-fname').value = parts[0] || '';
       document.getElementById('su-lname').value = parts.slice(1).join(' ') || '';
     }
-    if (row.inviter_role === 'professional') { selectRole('parent'); document.getElementById('role-professional').classList.add('locked'); }
-    else if (row.inviter_role === 'parent') { selectRole('professional'); document.getElementById('role-parent').classList.add('locked'); }
+    if (row.inviter_role === 'professional') {
+      selectRole('parent');
+      document.getElementById('role-professional').classList.add('locked');
+    } else if (row.inviter_role === 'parent') {
+      selectRole('professional');
+      document.getElementById('role-parent').classList.add('locked');
+    }
 
     showScreen('s-form');
   }
@@ -443,13 +454,14 @@
     const pw = document.getElementById('login-pw').value;
     if (!email || !pw) { showErr('login-err', 'Please enter your email and password.'); return; }
     if (inviteRow && inviteRow.invited_email && email !== inviteRow.invited_email.toLowerCase()) {
-      showErr('login-err', 'This invite was sent to ' + inviteRow.invited_email + '. Please sign in with that email.'); return;
+      showErr('login-err', 'This invite was sent to ' + inviteRow.invited_email + '. Please sign in with that email.');
+      return;
     }
-    setBtn('login-btn', true, 'Sign In and Accept');
+    setBtn('login-btn', 'login-spinner', true, '');
     const { data: auth, error } = await sb.auth.signInWithPassword({ email, password: pw });
-    if (error) { showErr('login-err', error.message); setBtn('login-btn', false, 'Sign In and Accept'); return; }
+    if (error) { showErr('login-err', error.message); setBtn('login-btn', 'login-spinner', false, ''); return; }
     await acceptInvite(auth.user.id);
-    setBtn('login-btn', false, 'Sign In and Accept');
+    setBtn('login-btn', 'login-spinner', false, '');
   }
 
   async function handleSignup() {
@@ -463,21 +475,81 @@
     if (!selectedRole) { showErr('signup-err', 'Please select your role above.'); return; }
     if (pw.length < 6) { showErr('signup-err', 'Password must be at least 6 characters.'); return; }
     if (pw !== p2) { showErr('signup-err', 'Passwords do not match.'); return; }
-    setBtn('signup-btn', true, 'Create Account and Accept');
+    setBtn('signup-btn', 'signup-spinner', true, '');
     const { data: auth, error } = await sb.auth.signUp({ email: em, password: pw });
-    if (error) { showErr('signup-err', error.message); setBtn('signup-btn', false, 'Create Account and Accept'); return; }
-    await sb.from('profiles').upsert({ id: auth.user.id, email: em, first_name: fn, last_name: ln, role: selectedRole }, { onConflict: 'id' });
+    if (error) { showErr('signup-err', error.message); setBtn('signup-btn', 'signup-spinner', false, ''); return; }
+    await sb.from('profiles').upsert({
+      id: auth.user.id, email: em,
+      first_name: fn, last_name: ln, role: selectedRole
+    }, { onConflict: 'id' });
     await acceptInvite(auth.user.id);
-    setBtn('signup-btn', false, 'Create Account and Accept');
+    setBtn('signup-btn', 'signup-spinner', false, '');
   }
 
   async function acceptInvite(userId) {
     try {
-      await sb.from('invitations').update({ status: 'accepted', accepted_at: new Date().toISOString(), accepted_by: userId }).eq('token', token).eq('status', 'pending');
-      await sb.from('connections').insert({ user_id: inviteRow.invited_by, connected_user_id: userId, connection_type: inviteRow.type || 'general', status: 'active' });
-      const name = inviteRow.inviter_name || 'your contact';
-      document.getElementById('success-body').innerHTML = 'You are now connected with <strong>' + name + '</strong> on DoulaLink. Open the app to get started.';
+      // 1. Mark invite as accepted
+      await sb.from('invitations').update({
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        accepted_by: userId
+      }).eq('token', token).eq('status', 'pending');
+
+      // 2. Create connection between both users
+      await sb.from('connections').insert({
+        user_id: inviteRow.invited_by,
+        connected_user_id: userId,
+        connection_type: inviteRow.type || 'general',
+        status: 'active'
+      });
+
+      // 3. Check if direct conversation already exists between both users
+      const { data: myMemberships } = await sb
+        .from('conversation_members')
+        .select('conversation_id')
+        .eq('user_id', userId);
+
+      const myIds = (myMemberships || []).map(r => r.conversation_id);
+      let existingConvoId = null;
+
+      if (myIds.length > 0) {
+        const { data: shared } = await sb
+          .from('conversation_members')
+          .select('conversation_id')
+          .eq('user_id', inviteRow.invited_by)
+          .in('conversation_id', myIds);
+        if (shared && shared.length > 0) {
+          existingConvoId = shared[0].conversation_id;
+        }
+      }
+
+      // 4. Create conversation only if it doesn't exist
+      if (!existingConvoId) {
+        const { data: newConvo } = await sb
+          .from('conversations')
+          .insert({
+            type: 'direct',
+            name: null,
+            last_message: null,
+            last_message_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (newConvo) {
+          await sb.from('conversation_members').insert([
+            { conversation_id: newConvo.id, user_id: inviteRow.invited_by, unread_count: 0 },
+            { conversation_id: newConvo.id, user_id: userId, unread_count: 0 }
+          ]);
+        }
+      }
+
+      // 5. Show success
+      const inviterName = inviteRow.inviter_name || 'your contact';
+      document.getElementById('success-body').innerHTML =
+        'You are now connected with <strong>' + inviterName + '</strong> on DoulaLink. Open the app to start chatting!';
       showScreen('s-success');
+
     } catch (err) {
       showErr('login-err', 'Could not accept invitation: ' + (err.message || 'Unknown error'));
       showErr('signup-err', 'Could not accept invitation: ' + (err.message || 'Unknown error'));
