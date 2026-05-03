@@ -1,667 +1,131 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>DoulaLink — Create Account</title>
-
-<!-- Supabase JS library -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Google Fonts & Font Awesome 6 -->
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --rose: #F4978E;
-  --rose-deep: #E28374;
-  --rose-dark: #D16B5C;
-  --cream: #FFF8F5;
-  --ink: #2C2C2E;
-  --ink-light: #3a3a3e;
-  --muted: #8E8E93;
-  --border: #ECDCD6;
-  --green-soft: #34C759;
-  --green-bg: #E9F7EF;
-  --shadow-sm: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
-  --shadow-lg: 0 30px 50px -20px rgba(244,151,142,0.35);
-  --transition: all 0.25s ease;
-}
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: radial-gradient(circle at 10% 30%, #FFF3EF 0%, #FFE6E1 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-/* premium card with glassmorphism */
-.card {
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  border-radius: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  max-width: 480px;
-  overflow: hidden;
-  transition: transform 0.3s;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-}
-
-@keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* brand header */
-.brand {
-  background: linear-gradient(125deg, var(--rose), var(--rose-dark));
-  padding: 28px 24px;
-  text-align: center;
-  color: white;
-  position: relative;
-}
-
-.brand h1 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 36px;
-  letter-spacing: -0.3px;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-
-.brand p {
-  opacity: 0.92;
-  font-weight: 500;
-  font-size: 0.9rem;
-  letter-spacing: 0.3px;
-}
-
-/* body padding */
-.body {
-  padding: 34px 30px 40px;
-}
-
-/* heading styles */
-.heading {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  color: var(--ink);
-  margin-bottom: 8px;
-  letter-spacing: -0.3px;
-}
-
-.sub-text {
-  font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 28px;
-  border-left: 3px solid var(--rose);
-  padding-left: 12px;
-}
-
-/* role cards */
-.role-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.role-card {
-  flex: 1;
-  padding: 16px 12px;
-  border-radius: 28px;
-  border: 2px solid var(--border);
-  background: white;
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: center;
-  font-weight: 600;
-  font-size: 16px;
-  color: var(--ink-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  box-shadow: var(--shadow-sm);
-  user-select: none;
-}
-
-.role-card i {
-  font-size: 1.3rem;
-  color: var(--rose);
-  transition: var(--transition);
-}
-
-.role-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--rose);
-  background: #FFF9F7;
-  box-shadow: 0 12px 20px -12px rgba(244,151,142,0.35);
-}
-
-.role-card.selected {
-  border-color: var(--rose);
-  background: linear-gradient(105deg, #FFF0EE, #FFE8E5);
-  box-shadow: 0 6px 14px rgba(244,151,142,0.25);
-  color: #C45A4C;
-}
-
-.role-card.selected i {
-  color: var(--rose-deep);
-  transform: scale(1.05);
-}
-
-/* form fields */
-.field {
-  margin-bottom: 20px;
-}
-
-.input-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon i {
-  position: absolute;
-  left: 16px;
-  color: var(--muted);
-  font-size: 1rem;
-  pointer-events: none;
-  transition: color 0.2s;
-}
-
-.input-icon input {
-  width: 100%;
-  padding: 14px 14px 14px 46px;
-  border-radius: 24px;
-  border: 1.5px solid var(--border);
-  background: white;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  transition: var(--transition);
-}
-
-.input-icon input:focus {
-  outline: none;
-  border-color: var(--rose);
-  box-shadow: 0 0 0 4px rgba(244,151,142,0.12);
-}
-
-/* password wrapper with eye */
-.pw-wrap {
-  position: relative;
-}
-
-.pw-wrap input {
-  padding-right: 52px;
-}
-
-.eye-btn {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: var(--muted);
-  transition: color 0.2s;
-  padding: 8px;
-  z-index: 2;
-  border-radius: 30px;
-}
-
-.eye-btn:hover {
-  color: var(--rose);
-  background: rgba(244,151,142,0.1);
-}
-
-/* strength text only */
-.strength-text {
-  font-size: 11px;
-  font-weight: 500;
-  margin-top: 5px;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-/* button */
-.btn {
-  width: 100%;
-  padding: 16px;
-  border-radius: 44px;
-  border: none;
-  background: linear-gradient(105deg, var(--rose), var(--rose-dark));
-  color: white;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-  transition: var(--transition);
-  margin-top: 16px;
-  box-shadow: 0 8px 18px rgba(244,151,142,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 26px rgba(244,151,142,0.4);
-  filter: brightness(1.02);
-}
-
-.btn:active {
-  transform: translateY(1px);
-}
-
-.btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* error box */
-.error-box {
-  display: none;
-  padding: 14px 18px;
-  margin-bottom: 24px;
-  border-radius: 28px;
-  background: #FFF1EF;
-  border-left: 5px solid #E45C3F;
-  color: #B63E25;
-  font-weight: 500;
-  font-size: 14px;
-  align-items: center;
-  gap: 12px;
-}
-
-.error-box.show {
-  display: flex;
-  animation: shake 0.3s ease;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-/* success screen */
-.success-container {
-  text-align: center;
-  padding: 20px 12px;
-}
-
-.success-circle {
-  width: 90px;
-  height: 90px;
-  background: #EFFAF3;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24px;
-  border: 2px solid var(--green-soft);
-  box-shadow: 0 8px 20px rgba(52,199,89,0.2);
-}
-
-.success-circle i {
-  font-size: 46px;
-  color: var(--green-soft);
-}
-
-.success-container h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  margin-bottom: 12px;
-  color: var(--ink);
-}
-
-.success-container p {
-  color: var(--muted);
-  margin-bottom: 12px;
-  font-size: 15px;
-}
-
-.success-note {
-  background: #F6F9FE;
-  margin-top: 20px;
-  padding: 14px;
-  border-radius: 32px;
-  font-size: 13px;
-  color: #557;
-}
-
-.legal-note {
-  font-size: 11px;
-  text-align: center;
-  color: var(--muted);
-  margin-top: 28px;
-  letter-spacing: 0.2px;
-}
-
-/* name row */
-.name-row {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 4px;
-}
-
-/* role hint */
-.role-hint {
-  font-size: 12px;
-  text-align: center;
-  margin-top: -12px;
-  margin-bottom: 18px;
-  color: var(--rose-deep);
-  font-weight: 500;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoulaLink — Sign In</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --rose: #F4978E; --rose-dark: #e07268; --rose-pale: #FFF0EE;
+      --cream: #FFF8F5; --ink: #2C2C2E; --sub: #636366;
+      --muted: #8E8E93; --border: #E8DDD9; --white: #ffffff;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    body::before { content: ''; position: fixed; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(244,151,142,.15) 0%, transparent 60%); border-radius: 50%; pointer-events: none; }
+    body::after { content: ''; position: fixed; bottom: -150px; left: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(244,151,142,.10) 0%, transparent 60%); border-radius: 50%; pointer-events: none; }
+    .card { background: var(--white); border-radius: 28px; box-shadow: 0 24px 64px rgba(244,151,142,.18), 0 4px 16px rgba(44,44,46,.06); width: 100%; max-width: 420px; overflow: hidden; animation: rise .5s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(28px) scale(.97); } to { opacity: 1; transform: none; } }
+    .brand { background: var(--rose); padding: 36px 36px 30px; text-align: center; position: relative; overflow: hidden; }
+    .brand::before { content: ''; position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; background: rgba(255,255,255,.08); border-radius: 50%; }
+    .brand::after { content: ''; position: absolute; bottom: -40px; left: -40px; width: 140px; height: 140px; background: rgba(255,255,255,.06); border-radius: 50%; }
+    .brand h1 { font-family: 'DM Serif Display', serif; font-size: 34px; color: #fff; position: relative; z-index: 1; margin-bottom: 6px; }
+    .brand h1 em { font-style: italic; opacity: .88; }
+    .brand p { font-size: 13.5px; color: rgba(255,255,255,.78); position: relative; z-index: 1; line-height: 1.5; }
+    .body { padding: 32px 28px 36px; }
+    .heading { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); margin-bottom: 4px; }
+    .sub-text { font-size: 13.5px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--sub); margin-bottom: 6px; }
+    .pw-wrap { position: relative; }
+    input[type=text], input[type=email], input[type=password] { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: 13px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink); background: var(--cream); outline: none; transition: border-color .2s, box-shadow .2s, background .2s; }
+    input:focus { border-color: var(--rose); background: #fff; box-shadow: 0 0 0 3.5px rgba(244,151,142,.14); }
+    input::placeholder { color: #BFB5B1; }
+    .eye-btn { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: var(--muted); transition: color .2s; }
+    .eye-btn:hover { color: var(--ink); }
+    .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .forgot { display: block; text-align: right; font-size: 12.5px; color: var(--rose); font-weight: 600; text-decoration: none; margin-top: -10px; margin-bottom: 24px; transition: opacity .2s; }
+    .forgot:hover { opacity: .7; }
+    .error-box { background: #FFF0EE; border: 1.5px solid rgba(244,151,142,.4); border-radius: 11px; padding: 12px 14px; font-size: 13px; color: #c0392b; margin-bottom: 18px; display: none; }
+    .error-box.show { display: block; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .btn { width: 100%; padding: 15px; background: var(--rose); color: #fff; border: none; border-radius: 13px; font-family: 'DM Sans', sans-serif; font-size: 15.5px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 22px rgba(244,151,142,.4); transition: background .2s, transform .15s, box-shadow .2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn:hover:not(:disabled) { background: var(--rose-dark); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(244,151,142,.48); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .7s linear infinite; display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .divider span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .create-acc-box { border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px; text-align: center; text-decoration: none; display: block; background: var(--cream); }
+    .create-acc-box .ca-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .create-acc-box .ca-action { font-size: 15px; font-weight: 700; color: var(--rose); }
+    @media (max-width: 480px) { .brand { padding: 28px 22px 24px; } .body { padding: 26px 22px 30px; } }
+  </style>
 </head>
 <body>
-
 <div class="card">
   <div class="brand">
-    <h1>DoulaLink</h1>
-    <p>compassion · community · connection</p>
+    <h1>Doula<em>Link</em></h1>
+    <p>Connecting doulas with the<br>families they support</p>
   </div>
-
   <div class="body">
-    <!-- signup form container -->
-    <div id="s-form">
-      <div class="heading">Create account</div>
-      <div class="sub-text">Join thousands of families &amp; birth professionals</div>
-
-      <div class="error-box" id="error-box">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span id="error-msg"></span>
-      </div>
-
-      <!-- Role selection -->
-      <div class="role-row" id="role-row">
-        <div class="role-card" id="role-parent-card">
-          <i class="fas fa-heart"></i> <span>Parent</span>
-        </div>
-        <div class="role-card" id="role-professional-card">
-          <i class="fas fa-clipboard-list"></i> <span>Professional</span>
-        </div>
-      </div>
-      <div class="role-hint" id="selectedRoleHint">Choose your role to continue</div>
-
-      <!-- first & last name row -->
-      <div class="name-row">
-        <div class="field" style="flex:1; margin-bottom: 16px;">
-          <div class="input-icon">
-            <i class="fas fa-user-pen"></i>
-            <input type="text" id="fname" placeholder="First name" autocomplete="given-name">
-          </div>
-        </div>
-        <div class="field" style="flex:1; margin-bottom: 16px;">
-          <div class="input-icon">
-            <i class="fas fa-user-pen"></i>
-            <input type="text" id="lname" placeholder="Last name" autocomplete="family-name">
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="input-icon">
-          <i class="fas fa-envelope"></i>
-          <input type="email" id="email" placeholder="Email address" autocomplete="email">
-        </div>
-      </div>
-
-      <div class="field pw-wrap">
-        <div class="input-icon">
-          <i class="fas fa-key"></i>
-          <input type="password" id="pw" placeholder="Create password" autocomplete="new-password">
-        </div>
-        <button class="eye-btn" id="eyeBtn-pw" type="button" aria-label="Show password">
-          <i class="far fa-eye-slash" id="eyeIcon-pw"></i>
+    <div class="heading">Welcome back</div>
+    <div class="sub-text">Sign in to your DoulaLink account to continue.</div>
+    <div class="error-box" id="error-box"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="password" placeholder="Your password" autocomplete="current-password" />
+        <button class="eye-btn" type="button" onclick="toggleEye()">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
-
-      <div class="field pw-wrap">
-        <div class="input-icon">
-          <i class="fas fa-check-double"></i>
-          <input type="password" id="pw2" placeholder="Confirm password" autocomplete="off">
-        </div>
-        <button class="eye-btn" id="eyeBtn-pw2" type="button" aria-label="Show confirm password">
-          <i class="far fa-eye-slash" id="eyeIcon-pw2"></i>
-        </button>
-      </div>
-
-      <button class="btn" id="signupBtn" type="button">
-        <i class="fas fa-arrow-right-to-bracket"></i> Create Account
-      </button>
-      <div class="legal-note">
-        By joining, you agree to DoulaLink's Terms &amp; Privacy. We'll send a verification email.
-      </div>
     </div>
-
-    <!-- success panel (hidden by default) -->
-    <div id="s-success" style="display: none;">
-      <div class="success-container">
-        <div class="success-circle">
-          <i class="fas fa-check"></i>
-        </div>
-        <h2>Welcome aboard!</h2>
-        <p>We've sent a verification link to <strong id="successEmail"></strong></p>
-        <div class="success-note">
-          <i class="fas fa-envelope-open-text"></i> Please check your inbox (and spam folder) to activate your account.
-        </div>
-        <div class="legal-note" style="margin-top: 20px;">Your DoulaLink journey starts now</div>
-      </div>
-    </div>
+    <a href="reset-password.html" class="forgot">Forgot password?</a>
+    <button class="btn" id="login-btn" onclick="handleLogin()">
+      <span id="btn-label">Sign In</span>
+      <div class="btn-spinner" id="btn-spinner"></div>
+    </button>
+    <div class="divider"><span>Don't have an account?</span></div>
+    <a href="signup.html" class="create-acc-box">
+      <div class="ca-label">New to DoulaLink?</div>
+      <div class="ca-action">Create Account</div>
+    </a>
   </div>
 </div>
 
 <script>
-(function() {
-  // ── Supabase init ──────────────────────────────────────────────
   const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY'; // ← replace with your real anon key
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  let db = null;
-  try {
-    if (typeof supabase !== 'undefined' && SUPABASE_ANON !== 'YOUR_SUPABASE_ANON_KEY') {
-      db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-    }
-  } catch (e) {
-    console.warn('Supabase init failed:', e);
+  function toggleEye() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+  function showError(msg) { const el = document.getElementById('error-box'); el.textContent = msg; el.classList.add('show'); }
+  function hideError() { const el = document.getElementById('error-box'); el.textContent = ''; el.classList.remove('show'); }
+  function setLoading(on) {
+    document.getElementById('login-btn').disabled = on;
+    document.getElementById('btn-label').style.display = on ? 'none' : 'inline';
+    document.getElementById('btn-spinner').style.display = on ? 'block' : 'none';
   }
 
-  // ── Role state ─────────────────────────────────────────────────
-  let selectedRole = null;
-
-  const parentCard = document.getElementById('role-parent-card');
-  const profCard   = document.getElementById('role-professional-card');
-  const roleHint   = document.getElementById('selectedRoleHint');
-
-  function selectRole(role) {
-    selectedRole = role;
-
-    parentCard.classList.toggle('selected', role === 'parent');
-    profCard.classList.toggle('selected',   role === 'professional');
-
-    if (role === 'parent') {
-      roleHint.textContent = 'Parent account — find doulas, resources & community';
-      roleHint.style.color = '#D16B5C';
-    } else {
-      roleHint.textContent = 'Professional account — list services, get referrals & grow practice';
-      roleHint.style.color = '#C45A4C';
-    }
-
-    // clear role-related error
-    const eb = document.getElementById('error-box');
-    if (eb.classList.contains('show') && document.getElementById('error-msg').textContent.includes('role')) {
-      eb.classList.remove('show');
-    }
+  async function handleLogin() {
+    hideError();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const pw = document.getElementById('password').value;
+    if (!email || !pw) { showError('Please enter your email and password.'); return; }
+    setLoading(true);
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    setLoading(false);
+    if (error) { showError(error.message); return; }
+    // ✅ FIX: Redirect to app after successful login
+    window.location.href = 'care-parent-chat://login-success';
+    // Fallback: agar app nahi khula to 2 sec baad app store
+    setTimeout(() => {
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.alisufiyan01.careparentchat';
+    }, 2000);
   }
 
-  parentCard.addEventListener('click', function () { selectRole('parent'); });
-  profCard.addEventListener('click',   function () { selectRole('professional'); });
-
-  // ── Password visibility ────────────────────────────────────────
-  function togglePw(inputId) {
-    const inp  = document.getElementById(inputId);
-    const icon = document.getElementById('eyeIcon-' + inputId);
-    if (!inp) return;
-    const show = inp.type === 'password';
-    inp.type = show ? 'text' : 'password';
-    if (icon) {
-      icon.className = show ? 'fas fa-eye' : 'far fa-eye-slash';
-    }
-  }
-
-  document.getElementById('eyeBtn-pw').addEventListener('click',  function () { togglePw('pw'); });
-  document.getElementById('eyeBtn-pw2').addEventListener('click', function () { togglePw('pw2'); });
-
-  // ── Error helpers ──────────────────────────────────────────────
-  function showError(msg) {
-    const eb  = document.getElementById('error-box');
-    const esm = document.getElementById('error-msg');
-    esm.textContent = msg;
-    eb.classList.add('show');
-    clearTimeout(eb._timer);
-    eb._timer = setTimeout(function () { eb.classList.remove('show'); }, 5500);
-  }
-
-  function clearError() {
-    document.getElementById('error-box').classList.remove('show');
-  }
-
-  // ── Password strength ──────────────────────────────────────────
-  function strengthOf(pw) {
-    if (!pw) return { score: 0, label: '', color: '#E28374' };
-    var s = 0;
-    if (pw.length >= 6)  s++;
-    if (pw.length >= 10) s++;
-    if (/[A-Z]/.test(pw)) s++;
-    if (/[0-9]/.test(pw)) s++;
-    if (/[^A-Za-z0-9]/.test(pw)) s++;
-    s = Math.min(s, 4);
-    var labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
-    var color  = s >= 3 ? '#34C759' : s === 2 ? '#FFA64B' : '#E45C3F';
-    return { score: s, label: labels[s], color: color };
-  }
-
-  function updateMeter() {
-    var pw   = document.getElementById('pw').value;
-    var text = document.getElementById('strengthText');
-    if (!pw) { text.textContent = ''; return; }
-    var r = strengthOf(pw);
-    text.textContent = 'Strength: ' + r.label;
-    text.style.color = r.color;
-  }
-
-  function checkMatch() {
-    var pw  = document.getElementById('pw').value;
-    var pw2 = document.getElementById('pw2');
-    pw2.style.borderColor = (pw2.value && pw !== pw2.value) ? '#E45C3F' : 'var(--border)';
-  }
-
-  document.getElementById('pw').addEventListener('input',  function () { updateMeter(); checkMatch(); });
-  document.getElementById('pw2').addEventListener('input', checkMatch);
-
-  // ── Signup handler ─────────────────────────────────────────────
-  document.getElementById('signupBtn').addEventListener('click', async function () {
-    clearError();
-
-    if (!selectedRole) {
-      showError('❌ Please select a role: Parent or Professional to continue.');
-      var rr = document.getElementById('role-row');
-      rr.style.transform = 'scale(1.02)';
-      setTimeout(function () { rr.style.transform = ''; }, 300);
-      return;
-    }
-
-    var fname = document.getElementById('fname').value.trim();
-    var lname = document.getElementById('lname').value.trim();
-    var email = document.getElementById('email').value.trim();
-    var pw    = document.getElementById('pw').value;
-    var pw2   = document.getElementById('pw2').value;
-
-    if (!fname || !lname)  { showError('Please enter your full name (first and last).'); return; }
-    if (!email)            { showError('Email address is required.'); return; }
-    if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(email)) { showError('Enter a valid email (e.g., name@example.com).'); return; }
-    if (!pw)               { showError('Please create a password.'); return; }
-    if (pw.length < 6)     { showError('Password must be at least 6 characters.'); return; }
-    if (strengthOf(pw).score < 2) { showError('Please use a stronger password (mix letters, numbers, or symbols).'); return; }
-    if (pw !== pw2)        { showError('Passwords do not match. Please check.'); return; }
-
-    var btn = document.getElementById('signupBtn');
-    var orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating account...';
-    btn.disabled  = true;
-
-    try {
-      if (!db) {
-        throw new Error('Supabase is not configured. Replace YOUR_SUPABASE_ANON_KEY with your real anon key.');
-      }
-
-      var meta = {
-        first_name:    fname,
-        last_name:     lname,
-        full_name:     fname + ' ' + lname,
-        role:          selectedRole,
-        signup_method: 'doulaLink_web',
-        created_at:    new Date().toISOString()
-      };
-
-      var res = await db.auth.signUp({
-        email:    email,
-        password: pw,
-        options:  { data: meta, emailRedirectTo: window.location.origin + '/dashboard' }
-      });
-
-      if (res.error) {
-        var msg = res.error.message;
-        if (msg.includes('User already registered')) msg = 'An account with this email already exists. Try logging in.';
-        else if (msg.includes('Invalid API key'))    msg = 'Configuration error — invalid Supabase key. Please contact support.';
-        throw new Error(msg);
-      }
-
-      if (res.data && res.data.user) {
-        document.getElementById('s-form').style.display    = 'none';
-        document.getElementById('s-success').style.display = 'block';
-        document.getElementById('successEmail').textContent = email;
-      } else {
-        throw new Error('Signup response invalid. Please try again.');
-      }
-
-    } catch (err) {
-      console.error('Signup error:', err);
-      showError(err.message || 'Network error. Please check your connection and try again.');
-      btn.innerHTML = orig;
-      btn.disabled  = false;
-    }
-  });
-
-  // ── Init ───────────────────────────────────────────────────────
-  updateMeter();
-})();
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
 </script>
 </body>
 </html>
