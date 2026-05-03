@@ -3,362 +3,234 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoulaLink — Reset Password</title>
+  <title>DoulaLink — Accept Invitation</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --rose: #F4978E; --rose-dark: #e07268; --rose-pale: #FFF0EE;
-      --cream: #FFF8F5; --ink: #2C2C2E; --muted: #8E8E93;
-      --border: #E8DDD9; --white: #ffffff; --green: #34C759;
-    }
-    body {
-      font-family: 'DM Sans', sans-serif; background: var(--cream);
-      min-height: 100vh; display: flex; align-items: center;
-      justify-content: center; padding: 20px;
-    }
-    body::before {
-      content: ''; position: fixed; top: -200px; right: -200px;
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(244,151,142,.15) 0%, transparent 60%);
-      border-radius: 50%; pointer-events: none;
-    }
-    .card {
-      background: var(--white); border-radius: 28px;
-      box-shadow: 0 24px 64px rgba(244,151,142,.18), 0 4px 16px rgba(44,44,46,.06);
-      width: 100%; max-width: 420px; overflow: hidden;
-      animation: rise .5s cubic-bezier(.22,1,.36,1) both;
-    }
+    :root { --rose: #F4978E; --rose-dark: #e07268; --rose-pale: #FFF0EE; --cream: #FFF8F5; --ink: #2C2C2E; --muted: #8E8E93; --border: #E8DDD9; --white: #ffffff; --green: #34C759; --green-pale: #F0FBF3; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: var(--white); border-radius: 28px; box-shadow: 0 24px 64px rgba(244,151,142,.18), 0 4px 16px rgba(44,44,46,.06); width: 100%; max-width: 420px; overflow: hidden; animation: rise .5s cubic-bezier(.22,1,.36,1) both; }
     @keyframes rise { from { opacity: 0; transform: translateY(28px) scale(.97); } to { opacity: 1; transform: none; } }
-
-    .brand {
-      background: var(--rose); padding: 30px 36px 26px;
-      text-align: center; position: relative; overflow: hidden;
-    }
-    .brand h1 { font-family: 'DM Serif Display', serif; font-size: 30px; color: #fff; margin-bottom: 4px; }
+    .brand { background: var(--rose); padding: 28px 36px 24px; text-align: center; }
+    .brand h1 { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; }
     .brand h1 em { font-style: italic; opacity: .88; }
-    .brand p { font-size: 13px; color: rgba(255,255,255,.78); }
-
-    .body { padding: 32px 28px 36px; }
-
-    /* Icon wrap */
-    .icon-wrap {
-      width: 80px; height: 80px; border-radius: 40px;
-      background: var(--rose-pale); border: 2px solid rgba(244,151,142,.3);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px; font-size: 36px;
-    }
-
-    .heading  { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); margin-bottom: 6px; text-align: center; }
-    .sub-text { font-size: 13.5px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; text-align: center; }
-
-    .field { margin-bottom: 16px; }
-    .field label {
-      display: block; font-size: 11px; font-weight: 600;
-      letter-spacing: .5px; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 6px;
-    }
-    .input-wrap { position: relative; display: flex; align-items: center; }
-    .input-wrap .pfx {
-      position: absolute; left: 14px; font-size: 15px;
-      pointer-events: none; opacity: .45;
-    }
-    input[type=email], input[type=password] {
-      width: 100%; padding: 13px 14px 13px 42px;
-      border: 1.5px solid var(--border); border-radius: 13px;
-      font-family: 'DM Sans', sans-serif; font-size: 15px;
-      color: var(--ink); background: var(--cream); outline: none;
-      transition: border-color .2s, box-shadow .2s, background .2s;
-    }
-    input:focus { border-color: var(--rose); background: #fff; box-shadow: 0 0 0 3.5px rgba(244,151,142,.14); }
-    input::placeholder { color: #BFB5B1; }
-    .eye-btn {
-      position: absolute; right: 13px;
-      background: none; border: none; cursor: pointer;
-      font-size: 15px; opacity: .4; transition: opacity .2s;
-    }
-    .eye-btn:hover { opacity: .8; }
-
-    /* Strength bars */
-    .strength-row { display: flex; gap: 5px; align-items: center; margin-top: 6px; margin-bottom: 4px; }
-    .s-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
-    .s-bar.met { background: var(--green); }
-    .s-label { font-size: 11px; color: var(--muted); min-width: 40px; }
-
-    .match-hint { font-size: 12px; color: #ef4444; margin-top: 4px; }
-
-    .error-box {
-      background: var(--rose-pale); border: 1.5px solid rgba(244,151,142,.4);
-      border-radius: 11px; padding: 12px 14px; font-size: 13px; color: #c0392b;
-      margin-bottom: 16px; display: none;
-    }
-    .error-box.show { display: block; }
-
-    .btn {
-      width: 100%; padding: 15px; background: var(--rose); color: #fff;
-      border: none; border-radius: 13px; font-family: 'DM Sans', sans-serif;
-      font-size: 15.5px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 6px 22px rgba(244,151,142,.4);
-      transition: background .2s, transform .15s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 8px;
-    }
-    .btn:hover:not(:disabled) { background: var(--rose-dark); transform: translateY(-1px); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-    .btn-spinner {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff;
-      animation: spin .7s linear infinite; display: none;
-    }
+    .brand p { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 4px; }
+    .body { padding: 36px 32px 40px; }
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(244,151,142,.2); border-top-color: var(--rose); animation: spin .8s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .back-link {
-      display: block; text-align: center; margin-top: 20px;
-      font-size: 13px; color: var(--muted); text-decoration: none;
-    }
-    .back-link span { color: var(--rose); font-weight: 600; }
-    .back-link:hover span { text-decoration: underline; }
-
-    /* Success state */
-    .success-wrap {
-      text-align: center; display: none;
-    }
-    .success-icon { font-size: 64px; margin-bottom: 16px; display: block; }
-    .success-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); margin-bottom: 8px; }
-    .success-sub   { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
-
-    /* Email sent state */
-    .sent-wrap { display: none; text-align: center; }
-
-    @media (max-width: 480px) {
-      .brand { padding: 24px 20px 20px; }
-      .body  { padding: 26px 22px 30px; }
-    }
+    .screen-heading { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); margin-bottom: 6px; text-align: center; }
+    .screen-sub { font-size: 13.5px; color: var(--muted); line-height: 1.55; text-align: center; margin-bottom: 24px; }
+    .icon-ring { width: 72px; height: 72px; border-radius: 50%; background: var(--rose-pale); border: 2px solid rgba(244,151,142,.25); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .icon-ring svg { width: 30px; height: 30px; stroke: var(--rose); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-ring.green { background: var(--green-pale); border-color: rgba(52,199,89,.25); }
+    .icon-ring.green svg { stroke: var(--green); }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { width: 100%; padding: 12px 44px 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 14.5px; color: var(--ink); background: var(--cream); outline: none; transition: border-color .2s; }
+    .pw-wrap input:focus { border-color: var(--rose); background: #fff; }
+    .pw-wrap input::placeholder { color: #BFB5B1; }
+    input[type=text] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 14.5px; color: var(--ink); background: var(--cream); outline: none; transition: border-color .2s; }
+    input[type=text]:focus { border-color: var(--rose); background: #fff; }
+    .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: var(--muted); }
+    .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .error-box { background: #FFF0EE; border: 1.5px solid rgba(244,151,142,.4); border-radius: 11px; padding: 11px 14px; font-size: 13px; color: #c0392b; margin-bottom: 16px; display: none; }
+    .error-box.show { display: block; }
+    .btn { width: 100%; padding: 14px; background: var(--rose); color: #fff; border: none; border-radius: 13px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 20px rgba(244,151,142,.4); transition: background .2s; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+    .btn:hover:not(:disabled) { background: var(--rose-dark); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .7s linear infinite; display: none; }
+    .inviter-box { background: var(--rose-pale); border: 1.5px solid rgba(244,151,142,.3); border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 24px; }
+    .inviter-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px; }
+    .inviter-name { font-size: 20px; font-weight: 700; color: var(--ink); }
   </style>
 </head>
 <body>
-
 <div class="card">
   <div class="brand">
     <h1>Doula<em>Link</em></h1>
-    <p>Reset your password</p>
+    <p>You've been invited! 🎉</p>
   </div>
-
   <div class="body">
 
-    <!-- ── STEP 1: Enter email ── -->
-    <div id="step-email">
-      <div class="icon-wrap">🔑</div>
-      <div class="heading">Forgot Password?</div>
-      <div class="sub-text">Enter your email address and we'll send you a link to reset your password.</div>
-
-      <div class="error-box" id="email-err"></div>
-
-      <div class="field">
-        <label>Email Address</label>
-        <div class="input-wrap">
-          <span class="pfx">✉️</span>
-          <input type="email" id="reset-email" placeholder="you@example.com" autocomplete="email" />
-        </div>
-      </div>
-
-      <button class="btn" id="send-btn" onclick="handleSendReset()">
-        <span id="send-label">Send Reset Link</span>
-        <div class="btn-spinner" id="send-spinner"></div>
-      </button>
-
-      <a href="https://doulalink.doulalink-web.workers.dev/login.html" class="back-link">
-        ← Back to <span>Sign In</span>
-      </a>
+    <!-- Loading -->
+    <div class="screen active" id="s-loading">
+      <div class="spinner"></div>
+      <p style="text-align:center; color:var(--muted);">Verifying your invitation...</p>
     </div>
 
-    <!-- ── STEP 2: Email sent ── -->
-    <div class="sent-wrap" id="step-sent">
-      <div class="icon-wrap" style="font-size:40px;">📬</div>
-      <div class="heading">Check Your Email</div>
-      <div class="sub-text" id="sent-sub">
-        We've sent a password reset link to your email. Click the link in the email to set a new password.
+    <!-- Error -->
+    <div class="screen" id="s-error">
+      <div class="icon-ring">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       </div>
-      <div style="background:#f0faf4;border:1.5px solid rgba(52,199,89,.3);border-radius:12px;padding:14px;font-size:13px;color:#1a7a34;margin-bottom:20px;">
-        ✅ Link sent! Check your inbox and spam folder.
-      </div>
-      <a href="https://doulalink.doulalink-web.workers.dev/login.html" class="btn" style="text-decoration:none;">
-        ← Back to Sign In
-      </a>
+      <div class="screen-heading">Invalid Link</div>
+      <div class="screen-sub" id="err-msg">This invitation link is invalid or has expired. Please ask to be invited again.</div>
     </div>
 
-    <!-- ── STEP 3: New password form (after clicking email link) ── -->
-    <div id="step-newpw" style="display:none;">
-      <div class="icon-wrap">🔒</div>
-      <div class="heading">Create New Password</div>
-      <div class="sub-text">Your new password must be at least 8 characters with one uppercase letter and one number.</div>
-
-      <div class="error-box" id="newpw-err"></div>
-
+    <!-- Signup form for new users -->
+    <div class="screen" id="s-signup">
+      <div class="screen-heading">Create Your Account</div>
+      <div class="screen-sub">You've been invited to join DoulaLink.</div>
+      <div class="inviter-box">
+        <div class="inviter-label">Invited by</div>
+        <div class="inviter-name" id="inviter-display">—</div>
+      </div>
+      <div class="error-box" id="signup-err"></div>
       <div class="field">
-        <label>New Password</label>
-        <div class="input-wrap">
-          <span class="pfx">🔒</span>
-          <input type="password" id="new-pw" placeholder="New password" autocomplete="new-password"
-                 oninput="updateStrength()" />
-          <button class="eye-btn" type="button" onclick="togglePw('new-pw', this)">👁️</button>
-        </div>
-        <div class="strength-row" id="strength-row" style="display:none;">
-          <div class="s-bar" id="sb1"></div>
-          <div class="s-bar" id="sb2"></div>
-          <div class="s-bar" id="sb3"></div>
-          <span class="s-label" id="s-label"></span>
+        <label>First Name</label>
+        <input type="text" id="fname" placeholder="First name" />
+      </div>
+      <div class="field">
+        <label>Last Name</label>
+        <input type="text" id="lname" placeholder="Last name" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="inv-email" placeholder="your@email.com" />
+      </div>
+      <div class="field">
+        <label>Create Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="inv-pw" placeholder="Minimum 8 characters" />
+          <button class="eye-btn" onclick="togglePw()">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
       </div>
-
-      <div class="field">
-        <label>Confirm Password</label>
-        <div class="input-wrap">
-          <span class="pfx">🔒</span>
-          <input type="password" id="confirm-pw" placeholder="Re-enter new password" autocomplete="new-password"
-                 oninput="checkMatch()" />
-          <button class="eye-btn" type="button" onclick="togglePw('confirm-pw', this)">👁️</button>
-        </div>
-        <div class="match-hint" id="match-hint" style="display:none;">Passwords do not match</div>
-      </div>
-
-      <button class="btn" id="save-btn" onclick="handleSavePassword()">
-        <span id="save-label">Save New Password</span>
-        <div class="btn-spinner" id="save-spinner"></div>
+      <button class="btn" id="signup-btn" onclick="handleSignup()">
+        <span id="signup-label">Join DoulaLink</span>
+        <div class="btn-spinner" id="signup-spinner"></div>
       </button>
     </div>
 
-    <!-- ── STEP 4: Success ── -->
-    <div class="success-wrap" id="step-success">
-      <span class="success-icon">✅</span>
-      <div class="success-title">Password Updated!</div>
-      <div class="success-sub">Your password has been successfully changed. You can now sign in with your new password.</div>
-      <a href="https://doulalink.doulalink-web.workers.dev/login.html" class="btn" style="text-decoration:none;">
-        Sign In Now →
-      </a>
+    <!-- Success -->
+    <div class="screen" id="s-success">
+      <div class="icon-ring green">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="screen-heading">Welcome to DoulaLink!</div>
+      <div class="screen-sub">Your account has been created. Open the app to get started.</div>
+      <a href="care-parent-chat://invite-accepted" class="btn" style="margin-top:16px;">Open App →</a>
+      <div style="margin-top:14px; text-align:center; font-size:13px; color:var(--muted);">Don't have the app?</div>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <a href="https://apps.apple.com/app/doulalink" class="btn" style="background:#2C2C2E; font-size:13px;">🍎 App Store</a>
+        <a href="https://play.google.com/store/apps/details?id=com.alisufiyan01.careparentchat" class="btn" style="background:#2C2C2E; font-size:13px;">▶ Google Play</a>
+      </div>
     </div>
 
   </div>
 </div>
 
 <script>
-  const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+  const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  // ── Check if page was opened from reset email link ──
-  // Supabase sends #access_token=...&type=recovery in hash
-  window.addEventListener('load', async () => {
-    const hash   = window.location.hash;
-    const params = new URLSearchParams(hash.replace('#', '?'));
-    const type   = params.get('type');
-    const access = params.get('access_token');
-    const refresh= params.get('refresh_token');
+  const SCREENS = ['s-loading','s-error','s-signup','s-success'];
+  function show(id) { SCREENS.forEach(s => document.getElementById(s).classList.toggle('active', s === id)); }
 
-    if (type === 'recovery' && access) {
-      // Set the session so updateUser works
-      await sb.auth.setSession({ access_token: access, refresh_token: refresh || '' });
-      showStep('step-newpw');
+  let inviteToken = null;
+  let inviteData = null;
+
+  async function init() {
+    show('s-loading');
+    const qp = new URLSearchParams(window.location.search);
+    inviteToken = qp.get('token');
+
+    if (!inviteToken) { show('s-error'); return; }
+
+    // Fetch invite from Supabase
+    const { data, error } = await sb
+      .from('invites')
+      .select('*')
+      .eq('token', inviteToken)
+      .single();
+
+    if (error || !data) {
+      document.getElementById('err-msg').textContent = 'This invitation link is invalid or has expired.';
+      show('s-error'); return;
     }
-  });
 
-  function showStep(id) {
-    ['step-email','step-sent','step-newpw','step-success'].forEach(s => {
-      document.getElementById(s).style.display = s === id ? 'block' : 'none';
-    });
+    // Check expiry
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      document.getElementById('err-msg').textContent = 'This invitation has expired. Please ask to be invited again.';
+      show('s-error'); return;
+    }
+
+    if (data.accepted_at) {
+      document.getElementById('err-msg').textContent = 'This invitation has already been used.';
+      show('s-error'); return;
+    }
+
+    inviteData = data;
+    document.getElementById('inviter-display').textContent = data.inviter_name || 'Your Care Team';
+    if (data.invited_email) document.getElementById('inv-email').value = data.invited_email;
+    if (data.invited_name) document.getElementById('fname').value = data.invited_name.split(' ')[0] || '';
+    show('s-signup');
   }
 
-  function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
-  function hideErr(id)      { const el = document.getElementById(id); el.textContent = ''; el.classList.remove('show'); }
+  init();
 
-  function setLoading(btnId, spinnerId, labelId, on) {
-    document.getElementById(btnId).disabled               = on;
-    document.getElementById(spinnerId).style.display      = on ? 'block' : 'none';
-    document.getElementById(labelId).style.display        = on ? 'none'  : 'inline';
+  function togglePw() {
+    const inp = document.getElementById('inv-pw');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
   }
 
-  function togglePw(id, btn) {
-    const i = document.getElementById(id);
-    i.type = i.type === 'password' ? 'text' : 'password';
-    btn.textContent = i.type === 'password' ? '👁️' : '🙈';
+  async function handleSignup() {
+    const errEl = document.getElementById('signup-err');
+    errEl.classList.remove('show');
+
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('inv-email').value.trim().toLowerCase();
+    const pw = document.getElementById('inv-pw').value;
+
+    if (!fname) { errEl.textContent = 'Please enter your first name.'; errEl.classList.add('show'); return; }
+    if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email.'; errEl.classList.add('show'); return; }
+    if (!pw || pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('show'); return; }
+
+    document.getElementById('signup-btn').disabled = true;
+    document.getElementById('signup-label').style.display = 'none';
+    document.getElementById('signup-spinner').style.display = 'block';
+
+    try {
+      // Create account
+      const { data: authData, error: authError } = await sb.auth.signUp({
+        email, password: pw,
+        options: {
+          data: {
+            first_name: fname, last_name: lname,
+            full_name: `${fname} ${lname}`,
+            role: inviteData?.invite_type || 'parent',
+            family_id: inviteData?.family_id,
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Mark invite as accepted
+      await sb.from('invites').update({ accepted_at: new Date().toISOString() }).eq('token', inviteToken);
+
+      // If family_id — add to family
+      if (inviteData?.family_id && authData?.user?.id) {
+        await sb.from('profiles').update({ family_id: inviteData.family_id }).eq('id', authData.user.id);
+      }
+
+      show('s-success');
+    } catch (err) {
+      errEl.textContent = err.message || 'Failed to create account. Please try again.';
+      errEl.classList.add('show');
+      document.getElementById('signup-btn').disabled = false;
+      document.getElementById('signup-label').style.display = 'inline';
+      document.getElementById('signup-spinner').style.display = 'none';
+    }
   }
-
-  // ── Strength meter ──
-  function strengthOf(pw) {
-    let s = 0;
-    if (pw.length >= 8)           s++;
-    if (/[A-Z]/.test(pw))         s++;
-    if (/[0-9]/.test(pw))         s++;
-    return s;
-  }
-
-  function updateStrength() {
-    const pw  = document.getElementById('new-pw').value;
-    const row = document.getElementById('strength-row');
-    if (!pw) { row.style.display = 'none'; return; }
-    row.style.display = 'flex';
-    const s = strengthOf(pw);
-    ['sb1','sb2','sb3'].forEach((id, i) => {
-      document.getElementById(id).classList.toggle('met', i < s);
-    });
-    const labels = ['Weak', 'Fair', 'Good', 'Strong'];
-    document.getElementById('s-label').textContent = labels[Math.min(s, 3)];
-  }
-
-  function checkMatch() {
-    const pw  = document.getElementById('new-pw').value;
-    const pw2 = document.getElementById('confirm-pw').value;
-    const hint = document.getElementById('match-hint');
-    hint.style.display = (pw2 && pw !== pw2) ? 'block' : 'none';
-  }
-
-  // ── STEP 1: Send reset email ──
-  async function handleSendReset() {
-    hideErr('email-err');
-    const email = document.getElementById('reset-email').value.trim().toLowerCase();
-    if (!email) { showErr('email-err', 'Please enter your email address.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('email-err', 'Please enter a valid email address.'); return; }
-
-    setLoading('send-btn', 'send-spinner', 'send-label', true);
-
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://doulalink.doulalink-web.workers.dev/reset-password.html',
-    });
-
-    setLoading('send-btn', 'send-spinner', 'send-label', false);
-
-    if (error) { showErr('email-err', error.message); return; }
-
-    document.getElementById('sent-sub').innerHTML =
-      `We've sent a password reset link to <strong>${email}</strong>. Click the link in the email to set a new password.`;
-    showStep('step-sent');
-  }
-
-  // ── STEP 3: Save new password ──
-  async function handleSavePassword() {
-    hideErr('newpw-err');
-    const pw  = document.getElementById('new-pw').value;
-    const pw2 = document.getElementById('confirm-pw').value;
-
-    if (!pw || !pw2)         { showErr('newpw-err', 'Please fill in both fields.'); return; }
-    if (pw.length < 8)       { showErr('newpw-err', 'Password must be at least 8 characters.'); return; }
-    if (strengthOf(pw) < 2)  { showErr('newpw-err', 'Please use a stronger password (add uppercase + number).'); return; }
-    if (pw !== pw2)          { showErr('newpw-err', 'Passwords do not match.'); return; }
-
-    setLoading('save-btn', 'save-spinner', 'save-label', true);
-
-    const { error } = await sb.auth.updateUser({ password: pw });
-
-    setLoading('save-btn', 'save-spinner', 'save-label', false);
-
-    if (error) { showErr('newpw-err', error.message); return; }
-
-    showStep('step-success');
-  }
-
-  // Init — default show email step
-  showStep('step-email');
 </script>
 </body>
 </html>
