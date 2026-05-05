@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoulaLink — Verifying Invitation</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --rose: #F4698A; --rose-dark: #e05578; --rose-pale: #FFF0F4;
+      --bg: #FFF0F4; --ink: #1C1C1E; --muted: #9A9AA0; --white: #ffffff;
+    }
+    body {
+      font-family: 'Nunito', sans-serif; background: var(--bg);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .logo-circle {
+      width: 64px; height: 64px; background: var(--rose); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px; box-shadow: 0 8px 24px rgba(244,105,138,.35);
+    }
+    .logo-circle svg { width: 30px; height: 30px; fill: #fff; }
+    .logo-name { font-size: 28px; font-weight: 800; color: var(--ink); margin-bottom: 32px; }
+    .card {
+      background: var(--white); border-radius: 28px;
+      box-shadow: 0 8px 40px rgba(244,105,138,.10), 0 2px 8px rgba(0,0,0,.04);
+      width: 100%; max-width: 380px; padding: 40px 28px;
+      text-align: center; animation: riseUp .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes riseUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+
+    .spinner { width: 52px; height: 52px; border-radius: 50%;
+      border: 4px solid rgba(244,105,138,.2); border-top-color: var(--rose);
+      animation: spin .8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .icon-ring { width: 72px; height: 72px; border-radius: 50%;
+      background: #FFF0EE; border: 2px solid rgba(244,105,138,.25);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .icon-ring svg { width: 32px; height: 32px; stroke: var(--rose); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    .title { font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    .state { display: none; }
+    .state.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="logo-circle">
+    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+  </div>
+  <div class="logo-name">DoulaLink</div>
+
+  <div class="card">
+    <!-- Loading -->
+    <div class="state active" id="s-loading">
+      <div class="spinner"></div>
+      <div class="title">Verifying your invitation…</div>
+      <div class="sub">Just a moment while we check your link.</div>
+    </div>
+
+    <!-- Error -->
+    <div class="state" id="s-error">
+      <div class="icon-ring">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div class="title">Invalid Invitation</div>
+      <div class="sub" id="err-msg">This invitation link is invalid or has expired. Please ask to be invited again.</div>
+    </div>
+  </div>
+
+<script>
+  const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  function show(id) {
+    document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  async function verifyToken() {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token');
+
+    if (!token) {
+      document.getElementById('err-msg').textContent = 'No invitation token found in this link.';
+      show('s-error');
+      return;
+    }
+
+    const { data, error } = await sb
+      .from('invites')
+      .select('*')
+      .eq('token', token)
+      .single();
+
+    if (error || !data) {
+      document.getElementById('err-msg').textContent = 'This invitation link is invalid or does not exist.';
+      show('s-error');
+      return;
+    }
+
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      document.getElementById('err-msg').textContent = 'This invitation has expired. Please ask to be invited again.';
+      show('s-error');
+      return;
+    }
+
+    if (data.accepted_at) {
+      // Already accepted — redirect to already-connected page
+      window.location.href = `already-connected.html?inviter=${encodeURIComponent(data.inviter_name || 'your care team')}`;
+      return;
+    }
+
+    // Token is valid — redirect to signup with token
+    window.location.href = `accept-invite.html?token=${encodeURIComponent(token)}`;
+  }
+
+  verifyToken();
+</script>
+</body>
+</html>
