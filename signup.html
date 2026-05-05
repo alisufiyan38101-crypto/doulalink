@@ -2,447 +2,854 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>DoulaLink — Create Account</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --rose: #F4698A;
-      --rose-dark: #e05578;
-      --rose-pale: #FFF0F4;
-      --bg: #FFF0F4;
-      --ink: #1C1C1E;
-      --sub: #555558;
-      --muted: #9A9AA0;
-      --border: #EDE0E4;
-      --input-bg: #F7F0F2;
-      --white: #ffffff;
-      --green: #34C759;
-      --green-pale: #F0FBF3;
-      --blue: #007AFF;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
+
+    :root {
+      --primary: #F4978E;
+      --primary-dark: #e07c72;
+      --primary-light: #FFF0EE;
+      --secondary: #A8D8EA;
+      --accent: #8B9FBC;
+      --success: #34C759;
+      --success-light: #E8F5E9;
+      --error: #FF3B30;
+      --error-light: #FFEBEE;
+      --warning: #FF9500;
+      --warning-light: #FFF3E0;
+      --text-dark: #1C1C1E;
+      --text-light: #8E8E93;
+      --text-muted: #C6C6C8;
+      --background: #FFF8F5;
+      --card-bg: #FFFFFF;
+      --border: #E9ECEF;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --shadow-primary: 0 4px 16px rgba(244, 151, 142, 0.3);
+    }
+
     body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--bg);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, var(--background) 0%, #fff5f0 100%);
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 48px 20px 40px;
-    }
-    .top-logo {
-      display: flex; flex-direction: column; align-items: center;
-      margin-bottom: 28px; animation: fadeDown .5s ease both;
-    }
-    .logo-circle {
-      width: 64px; height: 64px; background: var(--rose);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      margin-bottom: 14px; box-shadow: 0 8px 24px rgba(244,105,138,.35);
-    }
-    .logo-circle svg { width: 30px; height: 30px; fill: #fff; }
-    .logo-name { font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -.4px; }
-    .logo-tagline { font-size: 13px; color: var(--muted); margin-top: 3px; }
-
-    .card {
-      background: var(--white); border-radius: 28px;
-      box-shadow: 0 8px 40px rgba(244,105,138,.10), 0 2px 8px rgba(0,0,0,.04);
-      width: 100%; max-width: 400px;
-      padding: 32px 28px 36px;
-      animation: riseUp .5s cubic-bezier(.22,1,.36,1) .1s both;
-    }
-    @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:none} }
-    @keyframes riseUp  { from{opacity:0;transform:translateY(24px) scale(.98)} to{opacity:1;transform:none} }
-
-    .card-heading { font-size: 26px; font-weight: 800; color: var(--ink); margin-bottom: 6px; letter-spacing: -.3px; }
-    .card-sub {
-      font-size: 13.5px; color: var(--sub); margin-bottom: 24px;
-      padding-left: 12px; border-left: 3px solid var(--rose);
+      justify-content: center;
+      padding: 24px;
     }
 
-    .role-row { display: flex; gap: 12px; margin-bottom: 8px; }
-    .role-pill {
-      flex: 1; height: 48px; border-radius: 50px;
-      border: 2px solid var(--border); background: var(--input-bg);
-      cursor: pointer; font-family: 'Nunito', sans-serif;
-      font-size: 14px; font-weight: 700; color: var(--muted);
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all .2s;
-    }
-    .role-pill:hover { border-color: var(--rose); color: var(--rose); background: var(--rose-pale); }
-    .role-pill.selected { border-color: var(--rose); background: var(--rose); color: #fff; }
-    .role-pill svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; flex-shrink: 0; }
-    .role-hint { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 20px; min-height: 16px; }
-
-    .field { margin-bottom: 16px; }
-    .field label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
-
-    .name-row { display: flex; gap: 12px; }
-    .name-row .field { flex: 1; min-width: 0; }
-
-    .input-wrap {
-      display: flex; align-items: center;
-      background: var(--input-bg); border: 1.5px solid var(--border);
-      border-radius: 16px; padding: 0 16px; height: 52px;
-      overflow: hidden;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .input-wrap:focus-within { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(244,105,138,.12); background: #fff; }
-    .input-wrap svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; margin-right: 10px; }
-    .input-wrap input {
-      flex: 1; min-width: 0;
-      border: none; background: transparent;
-      font-family: 'Nunito', sans-serif; font-size: 15px; color: var(--ink); outline: none;
+    /* Container */
+    .container {
+      max-width: 480px;
       width: 100%;
+      margin: 0 auto;
     }
-    .input-wrap input::placeholder { color: var(--muted); }
-    .eye-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; line-height: 0; transition: color .2s; flex-shrink: 0; }
-    .eye-btn:hover { color: var(--rose); }
-    .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
 
-    .strength-text { font-size: 11.5px; font-weight: 700; margin-top: 5px; color: var(--muted); }
-
-    .error-box {
-      background: #FFF0F2; border: 1.5px solid rgba(244,105,138,.35);
-      border-radius: 14px; padding: 12px 14px;
-      font-size: 13.5px; color: #c0392b; margin-bottom: 18px;
-      display: none; align-items: center; gap: 8px;
+    /* Logo Section */
+    .logo-section {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeInDown 0.6s ease;
     }
-    .error-box.show { display: flex; animation: shake .3s ease; }
-    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
 
-    .info-box {
-      background: #E8F2FF; border: 1.5px solid rgba(0,122,255,.35);
-      border-radius: 14px; padding: 12px 14px;
-      font-size: 13.5px; color: var(--blue); margin-bottom: 18px;
-      display: none; align-items: center; gap: 8px;
+    .logo-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-lg);
     }
-    .info-box.show { display: flex; }
+
+    .logo-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .logo-icon svg path {
+      fill: white;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: 32px;
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      color: var(--text-light);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      background: var(--card-bg);
+      transition: all 0.2s ease;
+      color: var(--text-dark);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(244, 151, 142, 0.1);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Password Toggle */
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      padding: 0;
+    }
+
+    /* Role Selection */
+    .role-group {
+      margin-bottom: 24px;
+    }
+
+    .role-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .role-options {
+      display: flex;
+      gap: 12px;
+    }
+
+    .role-card {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      background: var(--card-bg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .role-card.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .role-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .role-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 4px;
+    }
+
+    .role-desc {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    /* Name Row */
+    .name-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .name-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    /* Password Strength */
+    .strength-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .strength-segment {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .strength-segment.active {
+      background: var(--primary);
+    }
+
+    .strength-text {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+
+    /* Messages */
+    .message {
+      padding: 12px 16px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .message.error {
+      background: var(--error-light);
+      color: var(--error);
+      border: 1px solid rgba(255, 59, 48, 0.2);
+    }
+
+    .message.success {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid rgba(52, 199, 89, 0.2);
+    }
+
+    .message.info {
+      background: rgba(0, 122, 255, 0.1);
+      color: #007AFF;
+      border: 1px solid rgba(0, 122, 255, 0.2);
+    }
+
+    .message.warning {
+      background: var(--warning-light);
+      color: var(--warning);
+      border: 1px solid rgba(255, 149, 0, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
 
     .btn-primary {
-      width: 100%; height: 54px; background: var(--rose); color: #fff;
-      border: none; border-radius: 50px; font-family: 'Nunito', sans-serif;
-      font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: .2px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 6px 20px rgba(244,105,138,.4); margin-top: 8px;
-      transition: background .2s, transform .15s, box-shadow .2s;
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-primary);
     }
-    .btn-primary:hover:not(:disabled) { background: var(--rose-dark); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(244,105,138,.48); }
-    .btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(244, 151, 142, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .btn-secondary {
-      width: 100%; height: 48px; background: var(--blue); color: #fff;
-      border: none; border-radius: 50px; font-family: 'Nunito', sans-serif;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 12px;
-      transition: background .2s, transform .15s;
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
     }
-    .btn-secondary:hover { background: #0056b3; transform: translateY(-1px); }
-    .btn-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .7s linear infinite; display: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .legal-note { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 18px; line-height: 1.6; }
-    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .divider span { font-size: 12px; color: var(--muted); }
+    .btn-secondary:hover {
+      background: var(--primary-light);
+    }
 
-    .success-wrap { text-align: center; padding: 12px 0; }
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0 20px;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider-text {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    /* Store Links */
+    .store-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .store-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--text-dark);
+      color: white;
+      text-decoration: none;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    .store-btn:hover {
+      opacity: 0.85;
+    }
+
+    /* Success Screen */
+    .success-screen {
+      text-align: center;
+      padding: 20px;
+    }
+
     .success-icon {
-      width: 88px; height: 88px; border-radius: 50%;
-      background: var(--green-pale); border: 2.5px solid var(--green);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px;
-      box-shadow: 0 8px 24px rgba(52,199,89,.2);
-      animation: popIn .5s cubic-bezier(.22,1,.36,1) both;
+      width: 88px;
+      height: 88px;
+      background: var(--success-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: scaleIn 0.5s ease;
     }
-    .success-icon svg { width: 40px; height: 40px; stroke: var(--green); fill: none; stroke-width: 2.5; stroke-linecap: round; }
-    @keyframes popIn { from{opacity:0;transform:scale(.4)} to{opacity:1;transform:scale(1)} }
-    .success-title { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
-    .success-sub { font-size: 14px; color: var(--sub); line-height: 1.6; margin-bottom: 20px; }
 
+    .success-icon svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--success);
+      stroke-width: 2;
+    }
+
+    .success-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+
+    .success-sub {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .email-highlight {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Hidden */
+    .hidden {
+      display: none;
+    }
+
+    /* Responsive */
     @media (max-width: 480px) {
-      body { padding: 36px 16px 32px; }
-      .card { padding: 26px 20px 30px; }
+      body {
+        padding: 16px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .name-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      .name-row .form-group:first-child {
+        margin-bottom: 16px;
+      }
     }
   </style>
 </head>
 <body>
-
-  <div class="top-logo">
-    <div class="logo-circle">
-      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+<div class="container">
+  <!-- Logo -->
+  <div class="logo-section">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L15 8H9L12 2Z" fill="white"/>
+        <path d="M12 22L9 16H15L12 22Z" fill="white"/>
+        <path d="M2 12L8 9V15L2 12Z" fill="white"/>
+        <path d="M22 12L16 9V15L22 12Z" fill="white"/>
+        <circle cx="12" cy="12" r="3" fill="white"/>
+      </svg>
     </div>
-    <div class="logo-name">DoulaLink</div>
-    <div class="logo-tagline">compassion · community · connection</div>
+    <h1>DoulaLink</h1>
+    <p class="subtitle">Connecting care, one moment at a time</p>
   </div>
 
-  <div class="card">
-    <!-- Form Screen -->
-    <div id="s-form">
-      <div class="card-heading">Create account</div>
-      <div class="card-sub">Join families & birth professionals</div>
+  <!-- Signup Form -->
+  <div id="signupForm" class="card">
+    <div id="messageContainer"></div>
 
-      <div class="error-box" id="error-box">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="error-msg"></span>
-      </div>
-
-      <div class="info-box" id="info-box">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="info-msg"></span>
-      </div>
-
-      <!-- Role Selection -->
-      <div class="role-row">
-        <button class="role-pill" id="role-parent" type="button" onclick="selectRole('parent')">
-          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          Parent
-        </button>
-        <button class="role-pill" id="role-professional" type="button" onclick="selectRole('professional')">
-          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          Professional
-        </button>
-      </div>
-      <div class="role-hint" id="role-hint">Choose your role to continue</div>
-
-      <div class="name-row">
-        <div class="field">
-          <label>First Name</label>
-          <div class="input-wrap">
-            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input type="text" id="fname" placeholder="First name" autocomplete="given-name" />
-          </div>
+    <!-- Role Selection -->
+    <div class="role-group">
+      <span class="role-label">I am a...</span>
+      <div class="role-options">
+        <div class="role-card" data-role="parent" onclick="selectRole('parent')">
+          <div class="role-icon">👨‍👩‍👧</div>
+          <div class="role-title">Parent</div>
+          <div class="role-desc">Track & manage care</div>
         </div>
-        <div class="field">
-          <label>Last Name</label>
-          <div class="input-wrap">
-            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input type="text" id="lname" placeholder="Last name" autocomplete="family-name" />
-          </div>
+        <div class="role-card" data-role="professional" onclick="selectRole('professional')">
+          <div class="role-icon">🩺</div>
+          <div class="role-title">Professional</div>
+          <div class="role-desc">Doula / Caregiver</div>
         </div>
       </div>
-
-      <div class="field">
-        <label>Email</label>
-        <div class="input-wrap">
-          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <input type="email" id="email" placeholder="your@email.com" autocomplete="email" onblur="checkExistingEmail()" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Password</label>
-        <div class="input-wrap">
-          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="pw" placeholder="Create password" autocomplete="new-password" oninput="updateStrength()" />
-          <button class="eye-btn" type="button" onclick="togglePw('pw')">
-            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="strength-text" id="strength-text"></div>
-      </div>
-
-      <div class="field">
-        <label>Confirm Password</label>
-        <div class="input-wrap">
-          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="pw2" placeholder="Confirm password" autocomplete="off" />
-          <button class="eye-btn" type="button" onclick="togglePw('pw2')">
-            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <button class="btn-primary" id="signup-btn" onclick="handleSignup()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        <span id="btn-label">Create Account</span>
-        <div class="btn-spinner" id="btn-spinner"></div>
-      </button>
-
-      <div class="divider"><span>Already have an account?</span></div>
-      
-      <button class="btn-secondary" onclick="window.location.href='login.html'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        Sign In Instead
-      </button>
-
-      <div class="legal-note">By joining, you agree to DoulaLink's Terms & Privacy.<br>We'll send a verification email.</div>
     </div>
 
-    <!-- Success Screen -->
-    <div id="s-success" style="display:none;">
-      <div class="success-wrap">
-        <div class="success-icon">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    <!-- Name Row -->
+    <div class="name-row">
+      <div class="form-group">
+        <label>First Name</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="firstName" placeholder="First name" autocomplete="given-name">
         </div>
-        <div class="success-title">Welcome aboard! 🎉</div>
-        <div class="success-sub">We've sent a verification link to<br><strong id="success-email"></strong></div>
-        <div class="success-note" style="background:var(--rose-pale); border-radius:14px; padding:14px; margin-top:16px;">
-          📬 Please check your inbox (and spam folder) to activate your account.
-        </div>
-        <button class="btn-secondary" onclick="window.location.href='login.html'" style="margin-top:20px;">Go to Sign In →</button>
       </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="lastName" placeholder="Last name" autocomplete="family-name">
+        </div>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrapper">
+        <span class="input-icon">✉️</span>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrapper">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="password" placeholder="Create a password" autocomplete="new-password">
+        <button class="password-toggle" type="button" onclick="togglePassword('password')">👁️</button>
+      </div>
+      <div class="strength-bar">
+        <div class="strength-segment" id="strength1"></div>
+        <div class="strength-segment" id="strength2"></div>
+        <div class="strength-segment" id="strength3"></div>
+        <div class="strength-segment" id="strength4"></div>
+      </div>
+      <div class="strength-text" id="strengthText"></div>
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <div class="input-wrapper">
+        <span class="input-icon">✓</span>
+        <input type="password" id="confirmPassword" placeholder="Confirm your password" autocomplete="off">
+        <button class="password-toggle" type="button" onclick="togglePassword('confirmPassword')">👁️</button>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button class="btn btn-primary" id="submitBtn" onclick="handleSignup()">
+      <span id="btnText">Create Account</span>
+      <div id="btnSpinner" class="spinner" style="display: none;"></div>
+    </button>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-text">Already have an account?</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="window.location.href='login.html'">
+      Sign In Instead
+    </button>
+
+    <div class="store-links">
+      <a href="https://apps.apple.com/app/doulalink" class="store-btn">🍎 App Store</a>
+      <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" class="store-btn">▶ Google Play</a>
+    </div>
+
+    <p style="font-size: 11px; color: var(--text-light); text-align: center; margin-top: 16px;">
+      By signing up, you agree to our Terms & Privacy Policy.<br>
+      We'll send a verification link to your email.
+    </p>
+  </div>
+
+  <!-- Success Screen -->
+  <div id="successScreen" class="card hidden">
+    <div class="success-screen">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="success-title">Welcome aboard! 🎉</div>
+      <div class="success-sub">
+        We've sent a verification link to<br>
+        <span class="email-highlight" id="successEmail"></span>
+      </div>
+      <div style="background: var(--primary-light); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+        <p style="font-size: 13px; color: var(--text-dark); margin-bottom: 4px;">📬 Next steps:</p>
+        <p style="font-size: 12px; color: var(--text-light);">Check your inbox (and spam folder) to verify your email address.</p>
+      </div>
+      <div class="store-links" style="margin-top: 8px;">
+        <a href="https://apps.apple.com/app/doulalink" class="store-btn">🍎 App Store</a>
+        <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" class="store-btn">▶ Google Play</a>
+      </div>
+      <button class="btn btn-secondary" onclick="window.location.href='login.html'" style="margin-top: 16px;">
+        Go to Sign In
+      </button>
     </div>
   </div>
+</div>
 
 <script>
-  const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
+  // Supabase config
+  const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
+  
+  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
   let selectedRole = null;
 
+  // Role selection
   function selectRole(role) {
     selectedRole = role;
-    document.getElementById('role-parent').classList.toggle('selected', role === 'parent');
-    document.getElementById('role-professional').classList.toggle('selected', role === 'professional');
-    const hint = document.getElementById('role-hint');
-    hint.textContent = role === 'parent' ? '👶 Parent — find doulas, resources & community' : '💼 Professional — list services & grow your practice';
-    hint.style.color = 'var(--rose)';
-    hideError();
-    hideInfo();
+    document.querySelectorAll('.role-card').forEach(card => {
+      card.classList.remove('selected');
+    });
+    document.querySelector(`.role-card[data-role="${role}"]`).classList.add('selected');
+    clearMessage();
   }
 
-  function togglePw(id) {
-    const inp = document.getElementById(id);
-    inp.type = inp.type === 'password' ? 'text' : 'password';
+  // Toggle password visibility
+  function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.type = field.type === 'password' ? 'text' : 'password';
   }
 
-  function updateStrength() {
-    const pw = document.getElementById('pw').value;
-    const el = document.getElementById('strength-text');
-    if (!pw) { el.textContent = ''; return; }
-    let s = Math.min(Math.floor(pw.length / 2), 5);
-    if (/[A-Z]/.test(pw)) s = Math.min(s + 1, 5);
-    if (/[0-9]/.test(pw)) s = Math.min(s + 1, 5);
-    if (/[^A-Za-z0-9]/.test(pw)) s = Math.min(s + 1, 5);
-    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
-    const colors = ['', '#e74c3c', '#f39c12', '#27ae60', '#27ae60', '#27ae60'];
-    el.textContent = 'Strength: ' + labels[s];
-    el.style.color = colors[s];
-  }
-
-  function showError(msg) {
-    const el = document.getElementById('error-box');
-    document.getElementById('error-msg').textContent = msg;
-    el.classList.add('show');
-  }
-  function hideError() { document.getElementById('error-box').classList.remove('show'); }
-  
-  function showInfo(msg) {
-    const el = document.getElementById('info-box');
-    document.getElementById('info-msg').textContent = msg;
-    el.classList.add('show');
-  }
-  function hideInfo() { document.getElementById('info-box').classList.remove('show'); }
-  
-  function setLoading(on) {
-    document.getElementById('signup-btn').disabled = on;
-    document.getElementById('btn-label').style.display = on ? 'none' : 'inline';
-    document.getElementById('btn-spinner').style.display = on ? 'block' : 'none';
-  }
-
-  async function checkExistingEmail() {
-    const email = document.getElementById('email').value.trim().toLowerCase();
-    if (!email || !email.includes('@')) return;
+  // Password strength indicator
+  function checkPasswordStrength() {
+    const password = document.getElementById('password').value;
+    const segments = ['strength1', 'strength2', 'strength3', 'strength4'];
+    let strength = 0;
     
+    segments.forEach(id => {
+      document.getElementById(id).classList.remove('active');
+    });
+    
+    if (password.length === 0) {
+      document.getElementById('strengthText').textContent = '';
+      return;
+    }
+    
+    if (password.length >= 6) strength = 1;
+    if (password.length >= 8) strength = 2;
+    if (/[A-Z]/.test(password) && /[0-9]/.test(password)) strength = 3;
+    if (password.length >= 10 && /[^A-Za-z0-9]/.test(password)) strength = 4;
+    
+    for (let i = 0; i < strength; i++) {
+      const element = document.getElementById(segments[i]);
+      if (element) element.classList.add('active');
+    }
+    
+    const strengthTexts = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+    document.getElementById('strengthText').textContent = strengthTexts[strength] || '';
+  }
+
+  // Show message
+  function showMessage(message, type = 'error') {
+    const container = document.getElementById('messageContainer');
+    const icons = {
+      error: '❌',
+      success: '✅',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+    container.innerHTML = `
+      <div class="message ${type}">
+        <span>${icons[type] || 'ℹ️'}</span>
+        <span>${message}</span>
+      </div>
+    `;
+    setTimeout(() => {
+      const msg = container.querySelector('.message');
+      if (msg) msg.style.opacity = '0';
+      setTimeout(() => {
+        if (container.innerHTML.includes(message)) {
+          container.innerHTML = '';
+        }
+      }, 300);
+    }, 5000);
+  }
+
+  function clearMessage() {
+    const container = document.getElementById('messageContainer');
+    container.innerHTML = '';
+  }
+
+  // Check existing email
+  async function checkExistingEmail(email) {
     try {
-      const { data, error } = await sb
+      const { data, error } = await supabase
         .from('profiles')
         .select('email')
         .eq('email', email)
         .maybeSingle();
       
       if (data) {
-        showInfo(`✅ An account with ${email} already exists. You can sign in instead.`);
-      } else {
-        hideInfo();
+        showMessage(`An account with this email already exists. Please sign in instead.`, 'warning');
+        return true;
       }
-    } catch(e) {
+      return false;
+    } catch (e) {
       console.log('Check error:', e);
+      return false;
     }
   }
 
+  // Handle signup
   async function handleSignup() {
-    hideError();
-    hideInfo();
+    clearMessage();
     
-    if (!selectedRole) { showError('Please select your role — Parent or Professional.'); return; }
-    
-    const fname = document.getElementById('fname').value.trim();
-    const lname = document.getElementById('lname').value.trim();
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim().toLowerCase();
-    const pw    = document.getElementById('pw').value;
-    const pw2   = document.getElementById('pw2').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
     
-    if (!fname || !lname) { showError('Please enter your first and last name.'); return; }
-    if (!email || !email.includes('@')) { showError('Please enter a valid email.'); return; }
-    if (!pw) { showError('Please create a password.'); return; }
-    if (pw.length < 6) { showError('Password must be at least 6 characters.'); return; }
-    if (pw !== pw2) { showError('Passwords do not match.'); return; }
+    // Validation
+    if (!selectedRole) {
+      showMessage('Please select whether you are a Parent or Professional.', 'error');
+      return;
+    }
     
-    setLoading(true);
+    if (!firstName || !lastName) {
+      showMessage('Please enter your first and last name.', 'error');
+      return;
+    }
+    
+    if (!email || !email.includes('@')) {
+      showMessage('Please enter a valid email address.', 'error');
+      return;
+    }
+    
+    if (!password) {
+      showMessage('Please create a password.', 'error');
+      return;
+    }
+    
+    if (password.length < 6) {
+      showMessage('Password must be at least 6 characters long.', 'error');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      showMessage('Passwords do not match.', 'error');
+      return;
+    }
+    
+    // Check if email exists
+    const exists = await checkExistingEmail(email);
+    if (exists) {
+      setTimeout(() => {
+        window.location.href = `login.html?email=${encodeURIComponent(email)}`;
+      }, 2000);
+      return;
+    }
+    
+    // Show loading
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnSpinner.style.display = 'block';
     
     try {
-      // First check if user already exists
-      const { data: existingUser } = await sb
-        .from('profiles')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle();
-      
-      if (existingUser) {
-        showInfo(`An account with ${email} already exists. Redirecting to sign in...`);
-        setTimeout(() => {
-          window.location.href = 'login.html?email=' + encodeURIComponent(email);
-        }, 2000);
-        setLoading(false);
-        return;
-      }
-      
-      // Create new account
-      const { data, error } = await sb.auth.signUp({
-        email, 
-        password: pw,
-        options: { 
-          data: { 
-            first_name: fname, 
-            last_name: lname, 
-            full_name: `${fname} ${lname}`, 
-            role: selectedRole 
-          } 
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            full_name: `${firstName} ${lastName}`,
+            role: selectedRole
+          }
         }
       });
       
       if (error) throw error;
       
-      // Show success
-      document.getElementById('s-form').style.display = 'none';
-      document.getElementById('s-success').style.display = 'block';
-      document.getElementById('success-email').textContent = email;
+      // Show success screen
+      document.getElementById('signupForm').classList.add('hidden');
+      document.getElementById('successScreen').classList.remove('hidden');
+      document.getElementById('successEmail').textContent = email;
       
-    } catch(err) {
-      let msg = err.message || 'Failed to create account.';
-      if (msg.toLowerCase().includes('already registered')) {
-        msg = `An account with ${email} already exists. Please sign in instead.`;
+    } catch (err) {
+      let message = err.message || 'Failed to create account. Please try again.';
+      if (message.toLowerCase().includes('already registered')) {
+        message = `An account with ${email} already exists. Redirecting to sign in...`;
+        showMessage(message, 'info');
         setTimeout(() => {
-          window.location.href = 'login.html?email=' + encodeURIComponent(email);
+          window.location.href = `login.html?email=${encodeURIComponent(email)}`;
         }, 2000);
+      } else {
+        showMessage(message, 'error');
       }
-      showError(msg);
-      setLoading(false);
+      btn.disabled = false;
+      btnText.style.display = 'inline';
+      btnSpinner.style.display = 'none';
     }
   }
   
-  // Check URL params for pre-filled email
+  // Auto-fill from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const inviteEmail = urlParams.get('email');
   if (inviteEmail) {
     document.getElementById('email').value = inviteEmail;
-    checkExistingEmail();
   }
+  
+  // Event listeners
+  document.getElementById('password').addEventListener('input', checkPasswordStrength);
+  document.getElementById('firstName').addEventListener('input', () => clearMessage());
+  document.getElementById('lastName').addEventListener('input', () => clearMessage());
+  document.getElementById('email').addEventListener('input', () => clearMessage());
 </script>
 </body>
 </html>
