@@ -45,13 +45,13 @@
     .field { margin-bottom:16px; }
     .field label { display:block; font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px; }
     .name-row { display:flex; gap:12px; }
-    .name-row .field { flex:1; }
-    .input-wrap { display:flex; align-items:center; background:var(--input-bg); border:1.5px solid var(--border); border-radius:16px; padding:0 16px; height:52px; transition:border-color .2s,box-shadow .2s; }
+    .name-row .field { flex:1; min-width:0; }
+    .input-wrap { display:flex; align-items:center; background:var(--input-bg); border:1.5px solid var(--border); border-radius:16px; padding:0 16px; height:52px; overflow:hidden; transition:border-color .2s,box-shadow .2s; }
     .input-wrap:focus-within { border-color:var(--rose); box-shadow:0 0 0 3px rgba(244,105,138,.12); background:#fff; }
     .input-wrap svg { width:18px; height:18px; stroke:var(--muted); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; margin-right:10px; }
-    .input-wrap input { flex:1; border:none; background:transparent; font-family:'Nunito',sans-serif; font-size:15px; color:var(--ink); outline:none; }
+    .input-wrap input { flex:1; min-width:0; border:none; background:transparent; font-family:'Nunito',sans-serif; font-size:15px; color:var(--ink); outline:none; width:100%; }
     .input-wrap input::placeholder { color:var(--muted); }
-    .eye-btn { background:none; border:none; cursor:pointer; color:var(--muted); padding:4px; line-height:0; transition:color .2s; }
+    .eye-btn { background:none; border:none; cursor:pointer; color:var(--muted); padding:4px; line-height:0; transition:color .2s; flex-shrink:0; }
     .eye-btn:hover { color:var(--rose); }
     .eye-btn svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; }
 
@@ -140,7 +140,7 @@
         <label>Create Password</label>
         <div class="input-wrap">
           <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="inv-pw" placeholder="Minimum 8 characters" />
+          <input type="password" id="inv-pw" placeholder="Minimum 6 characters" />
           <button class="eye-btn" onclick="togglePw()">
             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
@@ -159,7 +159,7 @@
       <div class="icon-ring green">
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div class="card-heading">Welcome to DoulaLink!</div>
+      <div class="card-heading">Welcome to DoulaLink! 🎉</div>
       <div class="card-sub">Your account has been created. Open the app to get started.</div>
       <a href="care-parent-chat://invite-accepted" class="btn-primary" style="margin-top:8px;">Open App →</a>
       <p style="margin-top:18px; text-align:center; font-size:13px; color:var(--muted);">Don't have the app yet?</p>
@@ -171,12 +171,14 @@
   </div>
 
 <script>
-  const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+  const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
   const SCREENS = ['s-loading','s-error','s-signup','s-success'];
-  function show(id) { SCREENS.forEach(s => document.getElementById(s).classList.toggle('active', s === id)); }
+  function show(id) {
+    SCREENS.forEach(s => document.getElementById(s).classList.toggle('active', s === id));
+  }
 
   let inviteToken = null, inviteData = null;
 
@@ -184,17 +186,52 @@
     show('s-loading');
     const qp = new URLSearchParams(window.location.search);
     inviteToken = qp.get('token');
-    if (!inviteToken) { show('s-error'); return; }
-    const { data, error } = await sb.from('invites').select('*').eq('token', inviteToken).single();
-    if (error || !data) { document.getElementById('err-msg').textContent = 'This invitation link is invalid or has expired.'; show('s-error'); return; }
-    if (data.expires_at && new Date(data.expires_at) < new Date()) { document.getElementById('err-msg').textContent = 'This invitation has expired. Please ask to be invited again.'; show('s-error'); return; }
-    if (data.accepted_at) { document.getElementById('err-msg').textContent = 'This invitation has already been used.'; show('s-error'); return; }
+
+    if (!inviteToken) {
+      document.getElementById('err-msg').textContent = 'No invitation token found in the link.';
+      show('s-error');
+      return;
+    }
+
+    // ✅ Fixed: 'invitations' not 'invites'
+    const { data, error } = await sb
+      .from('invitations')
+      .select('*')
+      .eq('token', inviteToken)
+      .single();
+
+    if (error || !data) {
+      document.getElementById('err-msg').textContent = 'This invitation link is invalid or has expired.';
+      show('s-error');
+      return;
+    }
+
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      document.getElementById('err-msg').textContent = 'This invitation has expired. Please ask to be invited again.';
+      show('s-error');
+      return;
+    }
+
+    if (data.accepted_at) {
+      document.getElementById('err-msg').textContent = 'This invitation has already been used.';
+      show('s-error');
+      return;
+    }
+
     inviteData = data;
     document.getElementById('inviter-display').textContent = data.inviter_name || 'Your Care Team';
+
+    // Pre-fill fields
     if (data.invited_email) document.getElementById('inv-email').value = data.invited_email;
-    if (data.invited_name) document.getElementById('fname').value = data.invited_name.split(' ')[0] || '';
+    if (data.invited_name) {
+      const parts = data.invited_name.split(' ');
+      document.getElementById('fname').value = parts[0] || '';
+      document.getElementById('lname').value = parts.slice(1).join(' ') || '';
+    }
+
     show('s-signup');
   }
+
   init();
 
   function togglePw() {
@@ -202,35 +239,68 @@
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
 
+  function setLoading(on) {
+    document.getElementById('signup-btn').disabled = on;
+    document.getElementById('signup-label').style.display = on ? 'none' : 'inline';
+    document.getElementById('signup-spinner').style.display = on ? 'block' : 'none';
+  }
+
+  function showErr(msg) {
+    document.getElementById('signup-err-msg').textContent = msg;
+    document.getElementById('signup-err').classList.add('show');
+  }
+
   async function handleSignup() {
-    const errEl = document.getElementById('signup-err');
-    const errMsg = document.getElementById('signup-err-msg');
-    errEl.classList.remove('show');
+    document.getElementById('signup-err').classList.remove('show');
+
     const fname = document.getElementById('fname').value.trim();
     const lname = document.getElementById('lname').value.trim();
     const email = document.getElementById('inv-email').value.trim().toLowerCase();
-    const pw = document.getElementById('inv-pw').value;
-    if (!fname) { errMsg.textContent = 'Please enter your first name.'; errEl.classList.add('show'); return; }
-    if (!email || !email.includes('@')) { errMsg.textContent = 'Please enter a valid email.'; errEl.classList.add('show'); return; }
-    if (!pw || pw.length < 8) { errMsg.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('show'); return; }
-    document.getElementById('signup-btn').disabled = true;
-    document.getElementById('signup-label').style.display = 'none';
-    document.getElementById('signup-spinner').style.display = 'block';
+    const pw    = document.getElementById('inv-pw').value;
+
+    if (!fname) { showErr('Please enter your first name.'); return; }
+    if (!email || !email.includes('@')) { showErr('Please enter a valid email.'); return; }
+    if (!pw || pw.length < 6) { showErr('Password must be at least 6 characters.'); return; }
+
+    setLoading(true);
+
     try {
+      // ✅ Fixed: use 'type' column not 'invite_type'
+      const role = inviteData?.type === 'professional' ? 'professional' : 'parent';
+
       const { data: authData, error: authError } = await sb.auth.signUp({
-        email, password: pw,
-        options: { data: { first_name: fname, last_name: lname, full_name: `${fname} ${lname}`, role: inviteData?.invite_type || 'parent', family_id: inviteData?.family_id } }
+        email,
+        password: pw,
+        options: {
+          data: {
+            first_name: fname,
+            last_name: lname,
+            full_name: `${fname} ${lname}`.trim(),
+            role,
+          }
+        }
       });
+
       if (authError) throw authError;
-      await sb.from('invites').update({ accepted_at: new Date().toISOString() }).eq('token', inviteToken);
-      if (inviteData?.family_id && authData?.user?.id) await sb.from('profiles').update({ family_id: inviteData.family_id }).eq('id', authData.user.id);
+
+      // ✅ Fixed: update 'invitations' not 'invites'
+      await sb
+        .from('invitations')
+        .update({
+          accepted_at: new Date().toISOString(),
+          accepted_by: authData?.user?.id || null,
+          status: 'accepted',
+        })
+        .eq('token', inviteToken);
+
       show('s-success');
-    } catch(err) {
-      errMsg.textContent = err.message || 'Failed to create account. Please try again.';
-      errEl.classList.add('show');
-      document.getElementById('signup-btn').disabled = false;
-      document.getElementById('signup-label').style.display = 'inline';
-      document.getElementById('signup-spinner').style.display = 'none';
+    } catch (err) {
+      let msg = err.message || 'Failed to create account. Please try again.';
+      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
+        msg = 'An account with this email already exists. Please use a different email.';
+      }
+      showErr(msg);
+      setLoading(false);
     }
   }
 </script>
