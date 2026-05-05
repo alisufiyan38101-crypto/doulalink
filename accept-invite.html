@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Accept Invite — DoulaLink</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -13,24 +12,9 @@
       box-sizing: border-box;
     }
 
-    :root {
-      --rose: #F4698A;
-      --rose-dark: #e05578;
-      --rose-pale: #FFF0F4;
-      --bg: #FFF0F4;
-      --ink: #1C1C1E;
-      --sub: #555558;
-      --muted: #9A9AA0;
-      --border: #EDE0E4;
-      --input-bg: #F7F0F2;
-      --white: #ffffff;
-      --green: #34C759;
-      --green-pale: #F0FBF3;
-    }
-
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, var(--bg) 0%, #FDE8ED 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #FFF0F4;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -39,8 +23,8 @@
     }
 
     .card {
-      background: var(--white);
-      max-width: 480px;
+      background: white;
+      max-width: 450px;
       width: 100%;
       padding: 40px 32px;
       border-radius: 32px;
@@ -49,18 +33,17 @@
     }
 
     .logo {
-      display: flex;
-      justify-content: center;
       margin-bottom: 24px;
     }
     .logo-circle {
       width: 64px;
       height: 64px;
-      background: var(--rose);
+      background: #F4698A;
       border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
+      margin: 0 auto;
       box-shadow: 0 8px 20px rgba(244, 105, 138, 0.25);
     }
     .logo-circle svg {
@@ -72,20 +55,20 @@
     h1 {
       font-size: 26px;
       font-weight: 700;
-      color: var(--ink);
+      color: #1C1C1E;
       margin-bottom: 8px;
     }
     .sub {
-      color: var(--muted);
+      color: #9A9AA0;
       font-size: 14px;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
     }
 
     .spinner {
       width: 48px;
       height: 48px;
       border: 3px solid rgba(244, 105, 138, 0.2);
-      border-top-color: var(--rose);
+      border-top-color: #F4698A;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin: 20px auto;
@@ -95,14 +78,14 @@
     }
 
     .inviter-card {
-      background: var(--rose-pale);
+      background: #FFF0F4;
       border-radius: 20px;
       padding: 20px;
       margin: 20px 0;
     }
     .inviter-label {
       font-size: 12px;
-      color: var(--muted);
+      color: #9A9AA0;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 6px;
@@ -110,7 +93,7 @@
     .inviter-name {
       font-size: 22px;
       font-weight: 800;
-      color: var(--rose);
+      color: #F4698A;
     }
 
     .field {
@@ -121,11 +104,10 @@
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: var(--ink);
+      color: #1C1C1E;
       margin-bottom: 6px;
     }
 
-    /* ✅ FIXED: Name row - no overflow */
     .name-row {
       display: flex;
       gap: 12px;
@@ -133,57 +115,42 @@
     }
     .name-row .field {
       flex: 1;
-      min-width: 0;
-      margin-bottom: 0;
     }
 
-    .input-wrapper {
-      width: 100%;
-    }
     input {
       width: 100%;
       padding: 14px 16px;
-      border: 1.5px solid var(--border);
+      border: 1.5px solid #EDE0E4;
       border-radius: 14px;
       font-size: 15px;
-      font-family: 'Inter', sans-serif;
-      background: var(--input-bg);
-      transition: all 0.2s ease;
-      color: var(--ink);
+      background: #F7F0F2;
+      transition: all 0.2s;
       box-sizing: border-box;
     }
     input:focus {
       outline: none;
-      border-color: var(--rose);
-      background: var(--white);
-      box-shadow: 0 0 0 3px rgba(244, 105, 138, 0.1);
-    }
-    input::placeholder {
-      color: var(--muted);
+      border-color: #F4698A;
+      background: white;
     }
     input[readonly] {
       background: #F0F0F0;
-      cursor: not-allowed;
     }
 
     button {
       width: 100%;
       padding: 16px;
-      background: var(--rose);
+      background: #F4698A;
       color: white;
       border: none;
       border-radius: 50px;
       font-size: 16px;
       font-weight: 700;
-      font-family: 'Inter', sans-serif;
       cursor: pointer;
-      transition: all 0.2s ease;
       margin-top: 16px;
       box-shadow: 0 4px 14px rgba(244, 105, 138, 0.3);
     }
     button:hover {
-      background: var(--rose-dark);
-      transform: translateY(-1px);
+      background: #e05578;
     }
 
     .error {
@@ -192,12 +159,11 @@
       padding: 12px;
       border-radius: 14px;
       margin: 16px 0;
-      font-size: 14px;
     }
     .success-icon {
       width: 80px;
       height: 80px;
-      background: var(--green-pale);
+      background: #F0FBF3;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -207,7 +173,7 @@
     .success-icon svg {
       width: 40px;
       height: 40px;
-      stroke: var(--green);
+      stroke: #34C759;
       stroke-width: 2;
     }
     .store-row {
@@ -217,7 +183,7 @@
     }
     .store-btn {
       flex: 1;
-      background: var(--ink);
+      background: #1C1C1E;
       color: white;
       text-decoration: none;
       padding: 12px;
@@ -226,36 +192,18 @@
       font-weight: 600;
       text-align: center;
     }
-    .store-btn:hover {
-      opacity: 0.85;
-    }
-    a {
-      color: var(--rose);
-      text-decoration: none;
-    }
 
-    /* ✅ FIXED: Mobile responsive - column on small screens */
     @media (max-width: 480px) {
-      body {
-        padding: 16px;
-      }
-      .card {
-        padding: 28px 20px;
-      }
-      .name-row {
-        flex-direction: column;
-        gap: 16px;
-      }
-      .name-row .field {
-        width: 100%;
-      }
+      body { padding: 16px; }
+      .card { padding: 28px 20px; }
+      .name-row { flex-direction: column; gap: 16px; }
     }
   </style>
 </head>
 <body>
 <div class="card" id="app">
   <div class="spinner"></div>
-  <p style="color: var(--muted);">Loading your invitation...</p>
+  <p>Loading your invitation...</p>
 </div>
 
 <script>
@@ -267,21 +215,9 @@
   const token = urlParams.get('token');
   const app = document.getElementById('app');
 
-  let inviteData = null;
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  }
-
   async function verifyInvite() {
     if (!token) {
-      app.innerHTML = '<div class="error">❌ No invitation token found. Please use the link from your email.</div>';
+      app.innerHTML = '<div class="error">❌ No invitation token found.</div>';
       return;
     }
 
@@ -297,22 +233,19 @@
       }
 
       const invite = data[0];
-      inviteData = invite;
 
       if (invite.accepted_at) {
-        app.innerHTML = `<div class="error">✅ This invitation has already been accepted. <a href="/login">Go to Login</a></div>`;
+        app.innerHTML = '<div class="error">✅ This invitation has already been accepted.<br><a href="/login">Go to Login</a></div>';
         return;
       }
 
       if (new Date(invite.expires_at) < new Date()) {
-        app.innerHTML = '<div class="error">⏰ This invitation has expired. Please ask for a new one.</div>';
+        app.innerHTML = '<div class="error">⏰ This invitation has expired.</div>';
         return;
       }
 
-      const inviterName = escapeHtml(invite.inviter_name || 'Your Care Team');
-      const invitedEmail = escapeHtml(invite.invited_email || '');
-      const invitedName = invite.invited_name || '';
-      const nameParts = invitedName.split(' ');
+      // Show signup form
+      const nameParts = (invite.invited_name || '').split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
 
@@ -329,45 +262,36 @@
 
         <div class="inviter-card">
           <div class="inviter-label">Invited by</div>
-          <div class="inviter-name">${inviterName}</div>
+          <div class="inviter-name">${escapeHtml(invite.inviter_name || 'Your Care Team')}</div>
         </div>
 
         <div class="name-row">
           <div class="field">
             <label>First Name</label>
-            <div class="input-wrapper">
-              <input type="text" id="fname" placeholder="First name" value="${escapeHtml(firstName)}">
-            </div>
+            <input type="text" id="fname" placeholder="First name" value="${escapeHtml(firstName)}">
           </div>
           <div class="field">
             <label>Last Name</label>
-            <div class="input-wrapper">
-              <input type="text" id="lname" placeholder="Last name" value="${escapeHtml(lastName)}">
-            </div>
+            <input type="text" id="lname" placeholder="Last name" value="${escapeHtml(lastName)}">
           </div>
         </div>
 
         <div class="field">
           <label>Email</label>
-          <div class="input-wrapper">
-            <input type="email" id="email" value="${invitedEmail}" placeholder="your@email.com" readonly>
-          </div>
+          <input type="email" id="email" value="${escapeHtml(invite.invited_email || '')}" readonly>
         </div>
 
         <div class="field">
           <label>Create Password</label>
-          <div class="input-wrapper">
-            <input type="password" id="password" placeholder="Minimum 8 characters">
-          </div>
+          <input type="password" id="password" placeholder="Minimum 8 characters">
         </div>
 
         <button id="createBtn">Join DoulaLink →</button>
       `;
 
-      document.getElementById('createBtn').addEventListener('click', () => createAccount(token));
+      document.getElementById('createBtn').onclick = () => createAccount(token);
 
     } catch (err) {
-      console.error('Verification error:', err);
       app.innerHTML = '<div class="error">❌ Something went wrong. Please try again.</div>';
     }
   }
@@ -399,10 +323,7 @@
       if (authError) throw authError;
 
       await sb.from('invites')
-        .update({ 
-          accepted_at: new Date().toISOString(),
-          accepted_by: authData.user?.id
-        })
+        .update({ accepted_at: new Date().toISOString() })
         .eq('token', inviteToken);
 
       app.innerHTML = `
@@ -413,15 +334,15 @@
         </div>
         <h1>You're connected! 🎉</h1>
         <p class="sub">Your account has been created.</p>
-        <div style="background: var(--green-pale); border-radius: 16px; padding: 16px; margin: 16px 0;">
-          <p style="font-weight: 600; color: #27ae60;">✅ Now connected to ${escapeHtml(inviteData?.inviter_name || 'your care team')}</p>
+        <div style="background: #F0FBF3; border-radius: 16px; padding: 16px; margin: 16px 0;">
+          <p style="font-weight: 600; color: #27ae60;">✅ Now connected to your care team</p>
         </div>
-        <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">
-          Check your email to verify your account, then open the app.
+        <p style="font-size: 14px; color: #9A9AA0; margin-bottom: 16px;">
+          Check your email to verify your account.
         </p>
-        <a href="/login" style="display: block; background: var(--rose); color: white; padding: 14px; border-radius: 50px; text-decoration: none; font-weight: 600; margin-bottom: 16px;">Open App →</a>
+        <a href="/login" style="display: block; background: #F4698A; color: white; padding: 14px; border-radius: 50px; text-decoration: none; font-weight: 600;">Open App →</a>
         
-        <p style="font-size: 13px; color: var(--muted);">Don't have the app yet?</p>
+        <p style="font-size: 13px; color: #9A9AA0; margin-top: 16px;">Don't have the app yet?</p>
         <div class="store-row">
           <a href="https://apps.apple.com/app/doulalink" class="store-btn">🍎 App Store</a>
           <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" class="store-btn">▶ Google Play</a>
@@ -429,13 +350,22 @@
       `;
 
     } catch (err) {
-      console.error('Signup error:', err);
       let msg = err.message || 'Failed to create account.';
       if (msg.toLowerCase().includes('already registered')) {
         msg = 'An account with this email already exists. Please sign in instead.';
       }
       app.innerHTML = `<div class="error">❌ ${msg}</div><button onclick="location.reload()">Try Again</button>`;
     }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
   }
 
   verifyInvite();
