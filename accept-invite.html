@@ -12,11 +12,16 @@
     .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
     .error{background:#FFEBEE;color:#c0392b;padding:12px;border-radius:14px;margin:16px 0}
-    .inviter-name{font-size:24px;font-weight:800;color:#F4698A;margin:16px 0}
+    .success{background:#E8F8F0;color:#2e7d32;padding:12px;border-radius:14px;margin:16px 0}
+    .warning{background:#FFF8E1;color:#E6A700;padding:12px;border-radius:14px;margin:16px 0}
+    .inviter-name{font-size:22px;font-weight:800;color:#F4698A;margin:16px 0}
     .field{margin-bottom:16px;text-align:left}
-    label{display:block;margin-bottom:6px;font-weight:600}
-    input{width:100%;padding:14px;border:1.5px solid #EDE0E4;border-radius:14px;font-size:15px;background:#F7F0F2}
+    label{display:block;font-size:13px;font-weight:600;color:#1C1C1E;margin-bottom:6px}
+    input{width:100%;padding:14px 16px;border:1.5px solid #EDE0E4;border-radius:14px;font-size:15px;background:#F7F0F2}
+    input:focus{outline:none;border-color:#F4698A;background:white}
+    input[readonly]{background:#F0F0F0}
     button{width:100%;padding:16px;background:#F4698A;color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
+    .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A}
     .name-row{display:flex;gap:12px}
     .name-row .field{flex:1}
     @media (max-width:480px){.name-row{flex-direction:column;gap:16px}}
@@ -37,7 +42,9 @@
   const token = urlParams.get('token');
   const app = document.getElementById('app');
 
-  async function verifyAndAccept() {
+  let inviteData = null;
+
+  async function verifyInvite() {
     if (!token) {
       app.innerHTML = '<div class="error">❌ No invitation token found.</div>';
       return;
@@ -55,9 +62,10 @@
       }
 
       const invite = data[0];
+      inviteData = invite;
 
       if (invite.accepted_at) {
-        app.innerHTML = '<div class="error">✅ This invitation has already been accepted.<br><a href="/login">Go to Login →</a></div>';
+        app.innerHTML = `<div class="success">✅ Already accepted. <a href="/login">Go to Login →</a></div>`;
         return;
       }
 
@@ -66,7 +74,33 @@
         return;
       }
 
-      // Show signup form
+      // ✅ Check if user already exists
+      const { data: existingUser } = await sb
+        .from('profiles')
+        .select('id, email')
+        .eq('email', invite.invited_email)
+        .maybeSingle();
+
+      if (existingUser) {
+        // ✅ CASE 2: Existing User - Show Sign In
+        app.innerHTML = `
+          <div style="font-size:48px; margin-bottom:16px;">👋</div>
+          <h2>Welcome Back!</h2>
+          <div class="warning">An account already exists with <strong>${escapeHtml(invite.invited_email)}</strong></div>
+          <div class="inviter-name">${escapeHtml(invite.inviter_name || 'Your Care Team')}</div>
+          <p style="color:#666; margin-bottom:20px;">Sign in to accept this invitation and get connected.</p>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="existingPassword" placeholder="Enter your password">
+          </div>
+          <button id="existingLoginBtn">Sign In & Connect →</button>
+          <a href="/signup" style="display:block; margin-top:12px; color:#F4698A;">Don't have access? Create new account</a>
+        `;
+        document.getElementById('existingLoginBtn').onclick = () => handleExistingUserLogin(token, invite.invited_email);
+        return;
+      }
+
+      // ✅ CASE 1: New User - Show Signup Form
       const nameParts = (invite.invited_name || '').split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -89,7 +123,7 @@
 
         <div class="field">
           <label>Email</label>
-          <input type="email" id="email" value="${escapeHtml(invite.invited_email || '')}" readonly>
+          <input type="email" id="email" value="${escapeHtml(invite.invited_email)}" readonly>
         </div>
 
         <div class="field">
@@ -98,17 +132,18 @@
         </div>
 
         <button id="createBtn">Create Account & Connect →</button>
-        <a href="/login?email=${encodeURIComponent(invite.invited_email)}" style="display:block; margin-top:12px; color:#F4698A;">Already have an account? Sign In</a>
       `;
 
-      document.getElementById('createBtn').onclick = () => createAccount(token);
+      document.getElementById('createBtn').onclick = () => createNewAccount(token);
 
     } catch (err) {
+      console.error('Error:', err);
       app.innerHTML = '<div class="error">❌ Something went wrong.</div>';
     }
   }
 
-  async function createAccount(inviteToken) {
+  // ✅ New User: Create account and accept invite
+  async function createNewAccount(inviteToken) {
     const fname = document.getElementById('fname').value.trim();
     const lname = document.getElementById('lname').value.trim();
     const email = document.getElementById('email').value.trim().toLowerCase();
@@ -124,21 +159,86 @@
       const { data: authData, error: authError } = await sb.auth.signUp({
         email,
         password,
-        options: { data: { first_name: fname, last_name: lname } }
+        options: {
+          data: { first_name: fname, last_name: lname, full_name: `${fname} ${lname}` }
+        }
       });
       if (authError) throw authError;
 
-      await sb.from('invites').update({ accepted_at: new Date().toISOString() }).eq('token', inviteToken);
+      // Accept the invite
+      await sb.from('invites')
+        .update({ accepted_at: new Date().toISOString(), accepted_by: authData.user?.id })
+        .eq('token', inviteToken);
 
-      app.innerHTML = `
-        <div style="color:#34C759;font-size:48px;margin:20px;">✓</div>
-        <h2>Account created! 🎉</h2>
-        <p>Check your email to verify your account.</p>
-        <a href="/login" style="display:inline-block;margin-top:16px;color:#F4698A;">Go to Login →</a>
-      `;
+      // Show success screen
+      showConnectedScreen(inviteData?.inviter_name || 'your care team');
+
     } catch (err) {
-      app.innerHTML = `<div class="error">${err.message}</div><button onclick="location.reload()">Try Again</button>`;
+      let msg = err.message;
+      if (msg.includes('already registered')) {
+        app.innerHTML = `
+          <div class="warning">⚠️ Account already exists</div>
+          <button id="retryLoginBtn">Sign In Instead →</button>
+        `;
+        document.getElementById('retryLoginBtn').onclick = () => {
+          window.location.href = `/login?email=${encodeURIComponent(email)}&redirect_token=${inviteToken}`;
+        };
+      } else {
+        app.innerHTML = `<div class="error">❌ ${msg}</div><button onclick="location.reload()">Try Again</button>`;
+      }
     }
+  }
+
+  // ✅ Existing User: Login and accept invite
+  async function handleExistingUserLogin(inviteToken, email) {
+    const password = document.getElementById('existingPassword').value;
+
+    if (!password) {
+      alert('Please enter your password');
+      return;
+    }
+
+    app.innerHTML = '<div class="spinner"></div><p>Signing in...</p>';
+
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      // Accept the invite
+      await sb.from('invites')
+        .update({ accepted_at: new Date().toISOString(), accepted_by: data.user?.id })
+        .eq('token', inviteToken);
+
+      // Show success screen
+      showConnectedScreen(inviteData?.inviter_name || 'your care team');
+
+    } catch (err) {
+      app.innerHTML = `
+        <div class="error">❌ ${err.message}</div>
+        <button onclick="location.reload()">Try Again</button>
+        <a href="/signup" style="display:block; margin-top:12px; color:#F4698A;">Create new account</a>
+      `;
+    }
+  }
+
+  // ✅ Show Connected Screen (Same for both new and existing user)
+  function showConnectedScreen(inviterName) {
+    app.innerHTML = `
+      <div style="color:#34C759; font-size:48px; margin:20px;">✓</div>
+      <h2>You're Connected! 🎉</h2>
+      <p style="color:#666; margin:10px 0;">You are now connected with <strong>${escapeHtml(inviterName)}</strong> on DoulaLink.</p>
+      <div class="success">✅ Invitation accepted successfully!</div>
+      <button id="openAppBtn">Open App →</button>
+      <p style="margin-top:16px; font-size:13px; color:#999;">Don't have the app?</p>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <a href="https://apps.apple.com/app/doulalink" style="flex:1; background:#1C1C1E; color:white; text-decoration:none; padding:12px; border-radius:50px; font-size:13px;">🍎 App Store</a>
+        <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" style="flex:1; background:#1C1C1E; color:white; text-decoration:none; padding:12px; border-radius:50px; font-size:13px;">▶ Google Play</a>
+      </div>
+    `;
+    document.getElementById('openAppBtn').onclick = () => {
+      // Redirect to app or home page
+      window.location.href = '/';
+    };
   }
 
   function escapeHtml(str) {
@@ -151,7 +251,7 @@
     });
   }
 
-  verifyAndAccept();
+  verifyInvite();
 </script>
 </body>
 </html>
