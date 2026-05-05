@@ -26,7 +26,6 @@
       --white: #ffffff;
       --green: #34C759;
       --green-pale: #F0FBF3;
-      --shadow: rgba(0, 0, 0, 0.04);
     }
 
     body {
@@ -45,11 +44,10 @@
       width: 100%;
       padding: 40px 32px;
       border-radius: 32px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.02);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
 
-    /* Logo */
     .logo {
       display: flex;
       justify-content: center;
@@ -83,7 +81,6 @@
       margin-bottom: 32px;
     }
 
-    /* Spinner */
     .spinner {
       width: 48px;
       height: 48px;
@@ -97,7 +94,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Inviter card */
     .inviter-card {
       background: var(--rose-pale);
       border-radius: 20px;
@@ -117,7 +113,6 @@
       color: var(--rose);
     }
 
-    /* Form fields — FIXED OVERFLOW */
     .field {
       margin-bottom: 16px;
       text-align: left;
@@ -130,12 +125,11 @@
       margin-bottom: 6px;
     }
 
-    /* Name row — fixed flexbox */
+    /* ✅ FIXED: Name row - no overflow */
     .name-row {
       display: flex;
       gap: 12px;
       margin-bottom: 8px;
-      flex-wrap: wrap;
     }
     .name-row .field {
       flex: 1;
@@ -143,7 +137,6 @@
       margin-bottom: 0;
     }
 
-    /* Input wrapper — fixed overflow */
     .input-wrapper {
       width: 100%;
     }
@@ -173,7 +166,6 @@
       cursor: not-allowed;
     }
 
-    /* Button */
     button {
       width: 100%;
       padding: 16px;
@@ -194,7 +186,6 @@
       transform: translateY(-1px);
     }
 
-    /* Messages */
     .error {
       background: #FFEBEE;
       color: #c0392b;
@@ -234,7 +225,6 @@
       font-size: 13px;
       font-weight: 600;
       text-align: center;
-      transition: opacity 0.2s;
     }
     .store-btn:hover {
       opacity: 0.85;
@@ -244,7 +234,7 @@
       text-decoration: none;
     }
 
-    /* Mobile responsive */
+    /* ✅ FIXED: Mobile responsive - column on small screens */
     @media (max-width: 480px) {
       body {
         padding: 16px;
@@ -257,7 +247,7 @@
         gap: 16px;
       }
       .name-row .field {
-        margin-bottom: 0;
+        width: 100%;
       }
     }
   </style>
@@ -319,7 +309,6 @@
         return;
       }
 
-      // Show signup form
       const inviterName = escapeHtml(invite.inviter_name || 'Your Care Team');
       const invitedEmail = escapeHtml(invite.invited_email || '');
       const invitedName = invite.invited_name || '';
@@ -347,13 +336,13 @@
           <div class="field">
             <label>First Name</label>
             <div class="input-wrapper">
-              <input type="text" id="fname" placeholder="First name" value="${escapeHtml(firstName)}" autocomplete="given-name">
+              <input type="text" id="fname" placeholder="First name" value="${escapeHtml(firstName)}">
             </div>
           </div>
           <div class="field">
             <label>Last Name</label>
             <div class="input-wrapper">
-              <input type="text" id="lname" placeholder="Last name" value="${escapeHtml(lastName)}" autocomplete="family-name">
+              <input type="text" id="lname" placeholder="Last name" value="${escapeHtml(lastName)}">
             </div>
           </div>
         </div>
@@ -368,7 +357,7 @@
         <div class="field">
           <label>Create Password</label>
           <div class="input-wrapper">
-            <input type="password" id="password" placeholder="Minimum 8 characters" autocomplete="new-password">
+            <input type="password" id="password" placeholder="Minimum 8 characters">
           </div>
         </div>
 
@@ -393,11 +382,9 @@
     if (!lname) { alert('Please enter your last name.'); return; }
     if (!password || password.length < 8) { alert('Password must be at least 8 characters.'); return; }
 
-    // Show loading
     app.innerHTML = '<div class="spinner"></div><p>Creating your account...</p>';
 
     try {
-      // 1. Create auth account
       const { data: authData, error: authError } = await sb.auth.signUp({
         email,
         password,
@@ -411,18 +398,13 @@
       });
       if (authError) throw authError;
 
-      // 2. ✅ Update invite as accepted
-      const { error: updateError } = await sb
-        .from('invites')
+      await sb.from('invites')
         .update({ 
           accepted_at: new Date().toISOString(),
           accepted_by: authData.user?.id
         })
         .eq('token', inviteToken);
 
-      if (updateError) console.error('Update invite error:', updateError);
-
-      // 3. Show success screen
       app.innerHTML = `
         <div class="success-icon">
           <svg viewBox="0 0 24 24">
@@ -437,7 +419,7 @@
         <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">
           Check your email to verify your account, then open the app.
         </p>
-        <a href="https://doulalink.doulalink-web.workers.dev/login" style="display: block; background: var(--rose); color: white; padding: 14px; border-radius: 50px; text-decoration: none; font-weight: 600; margin-bottom: 16px;">Open App →</a>
+        <a href="/login" style="display: block; background: var(--rose); color: white; padding: 14px; border-radius: 50px; text-decoration: none; font-weight: 600; margin-bottom: 16px;">Open App →</a>
         
         <p style="font-size: 13px; color: var(--muted);">Don't have the app yet?</p>
         <div class="store-row">
