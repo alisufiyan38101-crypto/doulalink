@@ -6,111 +6,24 @@
   <title>Accept Invite — DoulaLink</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #FFF0F4;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      margin: 0;
-    }
-    .card {
-      background: white;
-      max-width: 450px;
-      width: 100%;
-      padding: 40px 32px;
-      border-radius: 32px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid #F4698A20;
-      border-top-color: #F4698A;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 20px auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .error {
-      background: #FFEBEE;
-      color: #c0392b;
-      padding: 12px;
-      border-radius: 14px;
-      margin: 16px 0;
-    }
-    .success {
-      background: #E8F8F0;
-      color: #2e7d32;
-      padding: 12px;
-      border-radius: 14px;
-      margin: 16px 0;
-    }
-    .inviter-name {
-      font-size: 22px;
-      font-weight: 800;
-      color: #F4698A;
-      margin: 16px 0;
-    }
-    .field {
-      margin-bottom: 16px;
-      text-align: left;
-    }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #1C1C1E;
-      margin-bottom: 6px;
-    }
-    input {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1.5px solid #EDE0E4;
-      border-radius: 14px;
-      font-size: 15px;
-      background: #F7F0F2;
-      box-sizing: border-box;
-    }
-    input:focus {
-      outline: none;
-      border-color: #F4698A;
-      background: white;
-    }
-    input[readonly] {
-      background: #F0F0F0;
-    }
-    button {
-      width: 100%;
-      padding: 16px;
-      background: #F4698A;
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 16px;
-    }
-    .name-row {
-      display: flex;
-      gap: 12px;
-    }
-    .name-row .field {
-      flex: 1;
-    }
-    @media (max-width: 480px) {
-      .name-row {
-        flex-direction: column;
-        gap: 16px;
-      }
-      .card {
-        padding: 28px 20px;
-      }
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#FFF0F4;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+    .card{background:white;max-width:450px;width:100%;padding:40px 32px;border-radius:32px;text-align:center}
+    .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .error{background:#FFEBEE;color:#c0392b;padding:12px;border-radius:14px;margin:16px 0}
+    .success{background:#E8F8F0;color:#2e7d32;padding:12px;border-radius:14px;margin:16px 0}
+    .warning{background:#FFF8E1;color:#E6A700;padding:12px;border-radius:14px;margin:16px 0}
+    .inviter-name{font-size:22px;font-weight:800;color:#F4698A;margin:16px 0}
+    .field{margin-bottom:16px;text-align:left}
+    label{display:block;font-size:13px;font-weight:600;color:#1C1C1E;margin-bottom:6px}
+    input{width:100%;padding:14px 16px;border:1.5px solid #EDE0E4;border-radius:14px;font-size:15px;background:#F7F0F2;box-sizing:border-box}
+    input:focus{outline:none;border-color:#F4698A;background:white}
+    button{width:100%;padding:16px;background:#F4698A;color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
+    .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A;margin-top:8px}
+    .name-row{display:flex;gap:12px}
+    .name-row .field{flex:1}
+    @media (max-width:480px){.name-row{flex-direction:column;gap:16px}}
   </style>
 </head>
 <body>
@@ -129,42 +42,59 @@
   const app = document.getElementById('app');
 
   async function verifyAndAccept() {
-    // Step 1: Check token
     if (!token) {
-      app.innerHTML = '<div class="error">❌ No invitation token found. Please use the link from your email.</div>';
+      app.innerHTML = '<div class="error">❌ No invitation token found.</div>';
       return;
     }
 
     try {
-      // Step 2: Query database (NO .single())
       const { data, error } = await sb
         .from('invites')
         .select('*')
         .eq('token', token);
 
-      console.log('Query result:', { data, error });
-
-      // Step 3: Check if invite exists
       if (error || !data || data.length === 0) {
-        app.innerHTML = '<div class="error">❌ Invalid invitation link. Please request a new one.</div>';
+        app.innerHTML = '<div class="error">❌ Invalid invitation link.</div>';
         return;
       }
 
       const invite = data[0];
 
-      // Step 4: Check if already accepted
       if (invite.accepted_at) {
-        app.innerHTML = '<div class="error">✅ This invitation has already been accepted.<br><a href="/login" style="color:#F4698A;">Go to Login →</a></div>';
+        app.innerHTML = '<div class="success">✅ Invitation already accepted.<br><a href="/login" style="color:#F4698A;">Go to Login →</a></div>';
         return;
       }
 
-      // Step 5: Check expiry
       if (new Date(invite.expires_at) < new Date()) {
-        app.innerHTML = '<div class="error">⏰ This invitation has expired. Please ask for a new one.</div>';
+        app.innerHTML = '<div class="error">⏰ This invitation has expired.</div>';
         return;
       }
 
-      // Step 6: Token is VALID! Show signup form
+      // Check if user already exists
+      const { data: existingUser } = await sb
+        .from('profiles')
+        .select('email')
+        .eq('email', invite.invited_email)
+        .maybeSingle();
+
+      if (existingUser) {
+        // ✅ SHOW SIGN IN OPTION
+        app.innerHTML = `
+          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+          <h2>Account Already Exists</h2>
+          <div class="warning">An account with <strong>${escapeHtml(invite.invited_email)}</strong> already exists.</div>
+          <div class="inviter-name">👋 Welcome back!</div>
+          <p style="color: #666; margin-bottom: 20px;">Sign in to accept this invitation and connect with ${escapeHtml(invite.inviter_name || 'your care team')}.</p>
+          <button id="loginBtn">Sign In →</button>
+          <a href="/signup?email=${encodeURIComponent(invite.invited_email)}" style="display: block; margin-top: 12px; color: #F4698A; text-decoration: none;">Don't have an account? Create one</a>
+        `;
+        document.getElementById('loginBtn').onclick = () => {
+          window.location.href = `/login?email=${encodeURIComponent(invite.invited_email)}&redirect_token=${token}`;
+        };
+        return;
+      }
+
+      // Show signup form for new user
       const nameParts = (invite.invited_name || '').split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -196,13 +126,12 @@
         </div>
 
         <button id="createBtn">Create Account & Connect →</button>
+        <a href="/login?email=${encodeURIComponent(invite.invited_email)}" style="display: block; margin-top: 12px; color: #F4698A; text-decoration: none;">Already have an account? Sign In</a>
       `;
-
       document.getElementById('createBtn').onclick = () => createAccount(token);
 
     } catch (err) {
-      console.error('Error:', err);
-      app.innerHTML = '<div class="error">❌ Something went wrong. Please try again.</div>';
+      app.innerHTML = '<div class="error">❌ Something went wrong.</div>';
     }
   }
 
@@ -212,42 +141,22 @@
     const email = document.getElementById('email').value.trim().toLowerCase();
     const password = document.getElementById('password').value;
 
-    // Validation
-    if (!fname) { alert('Please enter your first name'); return; }
-    if (!lname) { alert('Please enter your last name'); return; }
-    if (password.length < 8) { alert('Password must be at least 8 characters'); return; }
+    if (!fname) { alert('First name required'); return; }
+    if (!lname) { alert('Last name required'); return; }
+    if (password.length < 8) { alert('Password must be 8+ characters'); return; }
 
-    // Show loading
     app.innerHTML = '<div class="spinner"></div><p>Creating your account...</p>';
 
     try {
-      // Create auth user
       const { data: authData, error: authError } = await sb.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            first_name: fname,
-            last_name: lname,
-            full_name: `${fname} ${lname}`
-          }
-        }
+        options: { data: { first_name: fname, last_name: lname, full_name: `${fname} ${lname}` } }
       });
-
       if (authError) throw authError;
 
-      // Mark invite as accepted
-      const { error: updateError } = await sb
-        .from('invites')
-        .update({ 
-          accepted_at: new Date().toISOString(),
-          accepted_by: authData.user?.id
-        })
-        .eq('token', inviteToken);
+      await sb.from('invites').update({ accepted_at: new Date().toISOString() }).eq('token', inviteToken);
 
-      if (updateError) console.error('Update error:', updateError);
-
-      // Show success
       app.innerHTML = `
         <div style="font-size: 64px; margin: 20px 0;">🎉</div>
         <h2>You're Connected!</h2>
@@ -256,13 +165,21 @@
         <p style="margin-top: 20px; font-size: 14px; color: #666;">Check your email to verify your account.</p>
         <a href="/login" style="display: inline-block; margin-top: 16px; color: #F4698A; text-decoration: none;"><strong>Continue to Login →</strong></a>
       `;
-
     } catch (err) {
-      let msg = err.message || 'Failed to create account';
+      let msg = err.message;
       if (msg.includes('already registered')) {
-        msg = 'An account with this email already exists. Please sign in instead.';
+        // Show sign in option
+        app.innerHTML = `
+          <div class="warning">⚠️ Account already exists</div>
+          <p>Please sign in to accept this invitation.</p>
+          <button id="loginBtn" class="btn-secondary">Sign In →</button>
+        `;
+        document.getElementById('loginBtn').onclick = () => {
+          window.location.href = `/login?email=${email}&redirect_token=${inviteToken}`;
+        };
+      } else {
+        app.innerHTML = `<div class="error">❌ ${msg}</div><button onclick="location.reload()">Try Again</button>`;
       }
-      app.innerHTML = `<div class="error">❌ ${msg}</div><button onclick="location.reload()">Try Again</button>`;
     }
   }
 
@@ -276,7 +193,6 @@
     });
   }
 
-  // Start
   verifyAndAccept();
 </script>
 </body>
