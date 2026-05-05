@@ -31,130 +31,88 @@
       padding: 48px 20px 40px;
     }
 
-    /* ── Top Logo Area ── */
     .top-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 28px;
-      animation: fadeDown .5s ease both;
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 28px; animation: fadeDown .5s ease both;
     }
     .logo-circle {
-      width: 64px; height: 64px;
-      background: var(--rose);
-      border-radius: 50%;
+      width: 64px; height: 64px; background: var(--rose); border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 14px;
-      box-shadow: 0 8px 24px rgba(244,105,138,.35);
+      margin-bottom: 14px; box-shadow: 0 8px 24px rgba(244,105,138,.35);
     }
     .logo-circle svg { width: 30px; height: 30px; fill: #fff; }
-    .logo-name {
-      font-size: 28px; font-weight: 800;
-      color: var(--ink); letter-spacing: -.4px;
-    }
-    .logo-tagline {
-      font-size: 13px; color: var(--muted);
-      margin-top: 3px; letter-spacing: .2px;
-    }
+    .logo-name { font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -.4px; }
+    .logo-tagline { font-size: 13px; color: var(--muted); margin-top: 3px; letter-spacing: .2px; }
 
-    /* ── Card ── */
     .card {
-      background: var(--white);
-      border-radius: 28px;
+      background: var(--white); border-radius: 28px;
       box-shadow: 0 8px 40px rgba(244,105,138,.10), 0 2px 8px rgba(0,0,0,.04);
-      width: 100%; max-width: 400px;
-      padding: 32px 28px 36px;
+      width: 100%; max-width: 400px; padding: 32px 28px 36px;
       animation: riseUp .5s cubic-bezier(.22,1,.36,1) .1s both;
     }
     @keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:none; } }
     @keyframes riseUp  { from { opacity:0; transform:translateY(24px) scale(.98); } to { opacity:1; transform:none; } }
 
-    .card-heading {
-      font-size: 26px; font-weight: 800;
-      color: var(--ink); margin-bottom: 6px; letter-spacing: -.3px;
-    }
+    .card-heading { font-size: 26px; font-weight: 800; color: var(--ink); margin-bottom: 6px; letter-spacing: -.3px; }
     .card-sub {
       font-size: 13.5px; color: var(--sub);
       display: flex; align-items: center; gap: 8px;
-      margin-bottom: 28px;
-      padding-left: 12px;
+      margin-bottom: 28px; padding-left: 12px;
       border-left: 3px solid var(--rose);
     }
 
-    /* ── Field ── */
     .field { margin-bottom: 18px; }
-    .field label {
-      display: block; font-size: 13px; font-weight: 700;
-      color: var(--ink); margin-bottom: 8px;
-    }
+    .field label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
     .input-wrap {
-      display: flex; align-items: center;
-      background: var(--input-bg);
-      border: 1.5px solid var(--border);
-      border-radius: 16px;
-      padding: 0 16px;
-      height: 52px;
-      transition: border-color .2s, box-shadow .2s;
+      display: flex; align-items: center; background: var(--input-bg);
+      border: 1.5px solid var(--border); border-radius: 16px;
+      padding: 0 16px; height: 52px; transition: border-color .2s, box-shadow .2s;
     }
     .input-wrap:focus-within {
-      border-color: var(--rose);
-      box-shadow: 0 0 0 3px rgba(244,105,138,.12);
-      background: #fff;
+      border-color: var(--rose); box-shadow: 0 0 0 3px rgba(244,105,138,.12); background: #fff;
     }
     .input-wrap svg {
-      width: 18px; height: 18px;
-      stroke: var(--muted); fill: none;
+      width: 18px; height: 18px; stroke: var(--muted); fill: none;
       stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       flex-shrink: 0; margin-right: 10px;
     }
     .input-wrap input {
       flex: 1; border: none; background: transparent;
-      font-family: 'Nunito', sans-serif;
-      font-size: 15px; color: var(--ink); outline: none;
+      font-family: 'Nunito', sans-serif; font-size: 15px; color: var(--ink); outline: none;
     }
     .input-wrap input::placeholder { color: var(--muted); }
     .eye-btn {
       background: none; border: none; cursor: pointer;
-      color: var(--muted); padding: 4px; line-height: 0;
-      transition: color .2s;
+      color: var(--muted); padding: 4px; line-height: 0; transition: color .2s;
     }
     .eye-btn:hover { color: var(--rose); }
     .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
 
     .forgot {
-      display: block; text-align: right;
-      font-size: 13px; font-weight: 700;
+      display: block; text-align: right; font-size: 13px; font-weight: 700;
       color: var(--rose); text-decoration: none;
-      margin-top: -6px; margin-bottom: 24px;
-      transition: opacity .2s;
+      margin-top: -6px; margin-bottom: 24px; transition: opacity .2s;
     }
     .forgot:hover { opacity: .7; }
 
-    /* ── Error ── */
     .error-box {
       background: #FFF0F2; border: 1.5px solid rgba(244,105,138,.35);
-      border-radius: 14px; padding: 12px 14px;
-      font-size: 13.5px; color: #c0392b; margin-bottom: 18px;
-      display: none; align-items: center; gap: 8px;
+      border-radius: 14px; padding: 12px 14px; font-size: 13.5px; color: #c0392b;
+      margin-bottom: 18px; display: none; align-items: center; gap: 8px;
     }
     .error-box.show { display: flex; animation: shake .3s ease; }
     @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
 
-    /* ── Primary Button ── */
     .btn-primary {
-      width: 100%; height: 54px;
-      background: var(--rose); color: #fff;
-      border: none; border-radius: 50px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 16px; font-weight: 800;
-      cursor: pointer; letter-spacing: .2px;
+      width: 100%; height: 54px; background: var(--rose); color: #fff;
+      border: none; border-radius: 50px; font-family: 'Nunito', sans-serif;
+      font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: .2px;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       box-shadow: 0 6px 20px rgba(244,105,138,.4);
       transition: background .2s, transform .15s, box-shadow .2s;
     }
     .btn-primary:hover:not(:disabled) {
-      background: var(--rose-dark);
-      transform: translateY(-1px);
+      background: var(--rose-dark); transform: translateY(-1px);
       box-shadow: 0 10px 26px rgba(244,105,138,.48);
     }
     .btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
@@ -165,50 +123,30 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Divider ── */
-    .divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 22px 0;
-    }
-    .divider::before, .divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     .divider span { font-size: 13px; color: var(--muted); }
 
-    /* ── Outline Button ── */
     .btn-outline {
-      width: 100%; height: 54px;
-      background: transparent; color: var(--rose);
-      border: 2px solid var(--rose); border-radius: 50px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 16px; font-weight: 800;
-      cursor: pointer; letter-spacing: .2px;
+      width: 100%; height: 54px; background: transparent; color: var(--rose);
+      border: 2px solid var(--rose); border-radius: 50px; font-family: 'Nunito', sans-serif;
+      font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: .2px;
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      text-decoration: none;
-      transition: background .2s, color .2s, transform .15s;
+      text-decoration: none; transition: background .2s, color .2s, transform .15s;
     }
-    .btn-outline:hover {
-      background: var(--rose-pale);
-      transform: translateY(-1px);
-    }
+    .btn-outline:hover { background: var(--rose-pale); transform: translateY(-1px); }
 
-    /* ── Footer tagline ── */
     .footer-note {
-      margin-top: 24px;
-      font-size: 13px; color: var(--muted);
+      margin-top: 24px; font-size: 13px; color: var(--muted);
       text-align: center; animation: fadeDown .5s ease .4s both;
     }
 
-    /* ── Toast ── */
     .toast {
       position: fixed; bottom: 28px; left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--ink); color: #fff;
-      padding: 12px 24px; border-radius: 40px;
-      font-size: 14px; font-weight: 700;
-      box-shadow: 0 8px 28px rgba(0,0,0,.2);
-      transition: transform .4s cubic-bezier(.22,1,.36,1);
-      z-index: 999; white-space: nowrap;
+      background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 40px;
+      font-size: 14px; font-weight: 700; box-shadow: 0 8px 28px rgba(0,0,0,.2);
+      transition: transform .4s cubic-bezier(.22,1,.36,1); z-index: 999; white-space: nowrap;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -220,7 +158,6 @@
 </head>
 <body>
 
-  <!-- Top Logo -->
   <div class="top-logo">
     <div class="logo-circle">
       <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -229,7 +166,6 @@
     <div class="logo-tagline">compassion · community · connection</div>
   </div>
 
-  <!-- Card -->
   <div class="card">
     <div class="card-heading">Welcome back</div>
     <div class="card-sub">Sign in to continue your care journey</div>
@@ -275,34 +211,27 @@
   </div>
 
   <div class="footer-note">Your care journey starts here 💛</div>
-
   <div class="toast" id="toast"></div>
-
-  <div id="download-section" style="display:none; margin-top:24px;">
-    <div class="divider"><span>Download App</span></div>
-    <div class="store-row">
-      <a href="https://apps.apple.com/app/doulalink" class="btn-dark">🍎 App Store</a>
-      <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" class="btn-dark">▶ Google Play</a>
-    </div>
-  </div>
 
 <script>
   const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+  // Auto-fill email if redirected from signup
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefillEmail = urlParams.get('email');
+  if (prefillEmail) document.getElementById('email').value = decodeURIComponent(prefillEmail);
+
   function toggleEye() {
     const input = document.getElementById('password');
     input.type = input.type === 'password' ? 'text' : 'password';
   }
   function showError(msg) {
-    const el = document.getElementById('error-box');
     document.getElementById('error-msg').textContent = msg;
-    el.classList.add('show');
+    document.getElementById('error-box').classList.add('show');
   }
-  function hideError() {
-    document.getElementById('error-box').classList.remove('show');
-  }
+  function hideError() { document.getElementById('error-box').classList.remove('show'); }
   function setLoading(on) {
     document.getElementById('login-btn').disabled = on;
     document.getElementById('btn-label').style.display = on ? 'none' : 'inline';
@@ -317,15 +246,18 @@
   async function handleLogin() {
     hideError();
     const email = document.getElementById('email').value.trim().toLowerCase();
-    const pw = document.getElementById('password').value;
+    const pw    = document.getElementById('password').value;
     if (!email || !pw) { showError('Please enter your email and password.'); return; }
     setLoading(true);
+
     const { error } = await sb.auth.signInWithPassword({ email, password: pw });
     setLoading(false);
     if (error) { showError(error.message); return; }
-    window.location.href = 'care-parent-chat://login-success';
+
+    // ✅ Correct deep link scheme: doulalink://
+    window.location.href = 'doulalink://login-success';
     setTimeout(() => {
-      window.location.href = 'https://play.google.com/store/apps/details?id=com.alisufiyan01.careparentchat';
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.doulalink.app';
     }, 2000);
   }
 
