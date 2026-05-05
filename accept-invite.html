@@ -12,15 +12,11 @@
     .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
     .error{background:#FFEBEE;color:#c0392b;padding:12px;border-radius:14px;margin:16px 0}
-    .success{background:#E8F8F0;color:#2e7d32;padding:12px;border-radius:14px;margin:16px 0}
-    .warning{background:#FFF8E1;color:#E6A700;padding:12px;border-radius:14px;margin:16px 0}
-    .inviter-name{font-size:22px;font-weight:800;color:#F4698A;margin:16px 0}
+    .inviter-name{font-size:24px;font-weight:800;color:#F4698A;margin:16px 0}
     .field{margin-bottom:16px;text-align:left}
-    label{display:block;font-size:13px;font-weight:600;color:#1C1C1E;margin-bottom:6px}
-    input{width:100%;padding:14px 16px;border:1.5px solid #EDE0E4;border-radius:14px;font-size:15px;background:#F7F0F2;box-sizing:border-box}
-    input:focus{outline:none;border-color:#F4698A;background:white}
+    label{display:block;margin-bottom:6px;font-weight:600}
+    input{width:100%;padding:14px;border:1.5px solid #EDE0E4;border-radius:14px;font-size:15px;background:#F7F0F2}
     button{width:100%;padding:16px;background:#F4698A;color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
-    .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A;margin-top:8px}
     .name-row{display:flex;gap:12px}
     .name-row .field{flex:1}
     @media (max-width:480px){.name-row{flex-direction:column;gap:16px}}
@@ -54,14 +50,14 @@
         .eq('token', token);
 
       if (error || !data || data.length === 0) {
-        app.innerHTML = '<div class="error">❌ Invalid invitation link.</div>';
+        app.innerHTML = '<div class="error">❌ Invalid or expired invitation link.</div>';
         return;
       }
 
       const invite = data[0];
 
       if (invite.accepted_at) {
-        app.innerHTML = '<div class="success">✅ Invitation already accepted.<br><a href="/login" style="color:#F4698A;">Go to Login →</a></div>';
+        app.innerHTML = '<div class="error">✅ This invitation has already been accepted.<br><a href="/login">Go to Login →</a></div>';
         return;
       }
 
@@ -70,31 +66,7 @@
         return;
       }
 
-      // Check if user already exists
-      const { data: existingUser } = await sb
-        .from('profiles')
-        .select('email')
-        .eq('email', invite.invited_email)
-        .maybeSingle();
-
-      if (existingUser) {
-        // ✅ SHOW SIGN IN OPTION
-        app.innerHTML = `
-          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-          <h2>Account Already Exists</h2>
-          <div class="warning">An account with <strong>${escapeHtml(invite.invited_email)}</strong> already exists.</div>
-          <div class="inviter-name">👋 Welcome back!</div>
-          <p style="color: #666; margin-bottom: 20px;">Sign in to accept this invitation and connect with ${escapeHtml(invite.inviter_name || 'your care team')}.</p>
-          <button id="loginBtn">Sign In →</button>
-          <a href="/signup?email=${encodeURIComponent(invite.invited_email)}" style="display: block; margin-top: 12px; color: #F4698A; text-decoration: none;">Don't have an account? Create one</a>
-        `;
-        document.getElementById('loginBtn').onclick = () => {
-          window.location.href = `/login?email=${encodeURIComponent(invite.invited_email)}&redirect_token=${token}`;
-        };
-        return;
-      }
-
-      // Show signup form for new user
+      // Show signup form
       const nameParts = (invite.invited_name || '').split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -102,7 +74,7 @@
       app.innerHTML = `
         <h2>✨ You're Invited!</h2>
         <div class="inviter-name">${escapeHtml(invite.inviter_name || 'Your Care Team')}</div>
-        <p style="color:#666; margin-bottom: 20px;">has invited you to join DoulaLink</p>
+        <p style="color:#666; margin-bottom:20px;">has invited you to join DoulaLink</p>
 
         <div class="name-row">
           <div class="field">
@@ -126,8 +98,9 @@
         </div>
 
         <button id="createBtn">Create Account & Connect →</button>
-        <a href="/login?email=${encodeURIComponent(invite.invited_email)}" style="display: block; margin-top: 12px; color: #F4698A; text-decoration: none;">Already have an account? Sign In</a>
+        <a href="/login?email=${encodeURIComponent(invite.invited_email)}" style="display:block; margin-top:12px; color:#F4698A;">Already have an account? Sign In</a>
       `;
+
       document.getElementById('createBtn').onclick = () => createAccount(token);
 
     } catch (err) {
@@ -151,35 +124,20 @@
       const { data: authData, error: authError } = await sb.auth.signUp({
         email,
         password,
-        options: { data: { first_name: fname, last_name: lname, full_name: `${fname} ${lname}` } }
+        options: { data: { first_name: fname, last_name: lname } }
       });
       if (authError) throw authError;
 
       await sb.from('invites').update({ accepted_at: new Date().toISOString() }).eq('token', inviteToken);
 
       app.innerHTML = `
-        <div style="font-size: 64px; margin: 20px 0;">🎉</div>
-        <h2>You're Connected!</h2>
-        <p style="color: #666; margin: 16px 0;">Your account has been created successfully.</p>
-        <div class="success">✅ You are now connected on DoulaLink</div>
-        <p style="margin-top: 20px; font-size: 14px; color: #666;">Check your email to verify your account.</p>
-        <a href="/login" style="display: inline-block; margin-top: 16px; color: #F4698A; text-decoration: none;"><strong>Continue to Login →</strong></a>
+        <div style="color:#34C759;font-size:48px;margin:20px;">✓</div>
+        <h2>Account created! 🎉</h2>
+        <p>Check your email to verify your account.</p>
+        <a href="/login" style="display:inline-block;margin-top:16px;color:#F4698A;">Go to Login →</a>
       `;
     } catch (err) {
-      let msg = err.message;
-      if (msg.includes('already registered')) {
-        // Show sign in option
-        app.innerHTML = `
-          <div class="warning">⚠️ Account already exists</div>
-          <p>Please sign in to accept this invitation.</p>
-          <button id="loginBtn" class="btn-secondary">Sign In →</button>
-        `;
-        document.getElementById('loginBtn').onclick = () => {
-          window.location.href = `/login?email=${email}&redirect_token=${inviteToken}`;
-        };
-      } else {
-        app.innerHTML = `<div class="error">❌ ${msg}</div><button onclick="location.reload()">Try Again</button>`;
-      }
+      app.innerHTML = `<div class="error">${err.message}</div><button onclick="location.reload()">Try Again</button>`;
     }
   }
 
