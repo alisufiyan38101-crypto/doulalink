@@ -9,25 +9,22 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:system-ui,sans-serif;background:#FFF0F4;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
     .card{background:white;max-width:400px;width:100%;padding:40px 32px;border-radius:32px;text-align:center}
-    .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
-    @keyframes spin{to{transform:rotate(360deg)}}
     .error{background:#FFEBEE;color:#c0392b;padding:12px;border-radius:14px;margin:16px 0}
     .field{margin-bottom:16px;text-align:left}
     label{display:block;margin-bottom:6px;font-weight:600}
     input{width:100%;padding:14px;border:1.5px solid #EDE0E4;border-radius:14px;font-size:15px;background:#F7F0F2}
     input:focus{outline:none;border-color:#F4698A;background:white}
     button{width:100%;padding:16px;background:#F4698A;color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
-    .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A}
-    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#1C1C1E;color:white;padding:12px 24px;border-radius:40px;font-size:14px;transition:transform .4s;z-index:999}
-    .toast.show{transform:translateX(-50%) translateY(0)}
+    .spinner{width:24px;height:24px;border:2px solid white;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-<div class="card" id="app">
+<div class="card">
   <h2>Welcome Back 👋</h2>
-  <p style="color:#666; margin-bottom:24px;">Sign in to your account</p>
+  <p style="color:#666; margin-bottom:24px;">Sign in to accept your invitation</p>
 
-  <div class="error" id="errorMsg" style="display:none;"></div>
+  <div id="errorMsg" class="error" style="display:none;"></div>
 
   <div class="field">
     <label>Email</label>
@@ -39,9 +36,7 @@
   </div>
 
   <button id="loginBtn">Sign In →</button>
-  <a href="/signup" style="display:block; margin-top:16px; color:#F4698A;">Don't have an account? Sign Up</a>
 </div>
-<div class="toast" id="toastMsg"></div>
 
 <script>
   const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
@@ -49,14 +44,9 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
   const urlParams = new URLSearchParams(window.location.search);
+  const redirectToken = urlParams.get('redirect_token');
   const prefillEmail = urlParams.get('email');
   if (prefillEmail) document.getElementById('email').value = decodeURIComponent(prefillEmail);
-
-  function toast(msg) {
-    const t = document.getElementById('toastMsg');
-    t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  }
 
   async function handleLogin() {
     const email = document.getElementById('email').value.trim();
@@ -72,24 +62,27 @@
 
     const btn = document.getElementById('loginBtn');
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:24px;height:24px;margin:0 auto;"></div>';
+    btn.innerHTML = '<div class="spinner"></div>';
 
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-
-    btn.disabled = false;
-    btn.innerHTML = 'Sign In →';
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) {
+      btn.disabled = false;
+      btn.innerHTML = 'Sign In →';
       errorDiv.textContent = error.message;
       errorDiv.style.display = 'block';
       return;
     }
 
-    // ✅ FIXED: Redirect to home page, NOT deep link
-    toast('✅ Login successful!');
-    setTimeout(() => {
-      window.location.href = '/';  // Home page
-    }, 1500);
+    // If coming from invite, accept it
+    if (redirectToken) {
+      await sb.from('invites')
+        .update({ accepted_at: new Date().toISOString(), accepted_by: data.user?.id })
+        .eq('token', redirectToken);
+    }
+
+    // Redirect to home
+    window.location.href = '/';
   }
 
   document.getElementById('loginBtn').onclick = handleLogin;
