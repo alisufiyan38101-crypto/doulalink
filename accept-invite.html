@@ -279,7 +279,7 @@
       .from('invites')
       .select('*')
       .eq('token', inviteToken)
-      .single();
+    
 
     if (error || !data || (data.expires_at && new Date(data.expires_at) < new Date())) {
       window.location.href = `verify-invite.html?token=${encodeURIComponent(inviteToken)}`;
