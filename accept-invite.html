@@ -43,39 +43,59 @@
 
     console.log('Token:', token);
 
-    async function createConnection(invite, userId, connectedUserId) {
-        // Check if connection already exists
+    async function createConnection(invite, invitedUserId, inviterUserId) {
+        console.log('Creating connection in connected_users table...');
+        console.log('Invited User ID:', invitedUserId);
+        console.log('Inviter User ID:', inviterUserId);
+        
+        // Validate IDs are different
+        if (invitedUserId === inviterUserId) {
+            console.error('Cannot create connection with same user');
+            return false;
+        }
+        
+        // Check if connection already exists in connected_users
         const { data: existingConnection, error: checkError } = await supabaseClient
-            .from('connections')
+            .from('connected_users')
             .select('id')
-            .or(`user_id.eq.${userId},connected_user_id.eq.${userId}`)
-            .or(`user_id.eq.${connectedUserId},connected_user_id.eq.${connectedUserId}`)
+            .or(`and(user_id.eq.${invitedUserId},connected_user_id.eq.${inviterUserId}),and(user_id.eq.${inviterUserId},connected_user_id.eq.${invitedUserId})`)
             .maybeSingle();
         
         if (existingConnection) {
-            console.log('Connection already exists');
+            console.log('Connection already exists in connected_users');
             return true;
         }
         
         const connectionType = invite.type === 'professional' ? 'professional' : 'family';
+        const now = new Date().toISOString();
         
-        const { data: connection, error: connectionError } = await supabaseClient
-            .from('connections')
-            .insert({
-                user_id: userId,
-                connected_user_id: connectedUserId,
-                connection_type: connectionType,
-                invited_by: invite.invited_by,
-                status: 'active'
-            })
+        // Create bidirectional connections in connected_users table
+        const { data: connections, error: connectionError } = await supabaseClient
+            .from('connected_users')
+            .insert([
+                {
+                    user_id: invitedUserId,
+                    connected_user_id: inviterUserId,
+                    connection_type: connectionType,
+                    status: 'active',
+                    created_at: now
+                },
+                {
+                    user_id: inviterUserId,
+                    connected_user_id: invitedUserId,
+                    connection_type: connectionType,
+                    status: 'active',
+                    created_at: now
+                }
+            ])
             .select();
         
         if (connectionError) {
-            console.error('Failed to create connection:', connectionError);
+            console.error('Failed to create connection in connected_users:', connectionError);
             return false;
         }
         
-        console.log('Connection created:', connection);
+        console.log('Connections created successfully in connected_users:', connections);
         return true;
     }
 
@@ -141,8 +161,12 @@
                     return;
                 }
                 
-                // Create connection between users
-                await createConnection(invite, existingUser.id, invite.invited_by);
+                // Create connection between users in connected_users table
+                const connectionCreated = await createConnection(invite, existingUser.id, invite.invited_by);
+                
+                if (!connectionCreated) {
+                    console.warn('Connection was not created, but invitation was accepted');
+                }
                 
                 showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`, true);
             } else {
@@ -258,8 +282,12 @@
                     console.error('Failed to update invitation:', updateError);
                 }
                 
-                // Create connection between users
-                await createConnection(invite, authData.user.id, invite.invited_by);
+                // Create connection between users in connected_users table
+                const connectionCreated = await createConnection(invite, authData.user.id, invite.invited_by);
+                
+                if (!connectionCreated) {
+                    console.warn('Connection was not created, but account was created');
+                }
 
                 showSuccess(invite.inviter_name, `${firstName} ${lastName}`, false);
 
@@ -283,7 +311,7 @@
                 ✅ ${message}
             </div>
             <p style="margin:16px 0;color:#666;">You can now share updates, messages, and track progress together.</p>
-            <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go to Dashboard</button>
+            <button onclick="handleGoToDashboard()">Go to Dashboard</button>
         `;
     }
 
@@ -297,6 +325,12 @@
         `;
     }
 
+    function handleGoToDashboard() {
+        // Force a cache-busting reload to refresh the connection data
+        const dashboardUrl = 'https://doulalink.doulalink-web.workers.dev/dashboard?refresh=' + Date.now();
+        window.location.href = dashboardUrl;
+    }
+
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -304,6 +338,7 @@
         return div.innerHTML;
     }
 
+    // Start verification
     verifyAndAccept();
 </script>
 </body>
