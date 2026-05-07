@@ -53,7 +53,7 @@
         }
 
         try {
-            // ✅ Using maybeSingle() instead of single() to avoid "no rows" error
+            // Using maybeSingle() instead of single() to avoid "no rows" error
             const { data: invite, error: inviteError } = await supabaseClient
                 .from('invitations')
                 .select('*')
@@ -108,11 +108,11 @@
                 // User already exists - just accept the invitation
                 console.log('Existing user found:', existingUser);
                 
+                // ✅ FIXED: No invited_user_id column
                 const { error: updateError } = await supabaseClient
                     .from('invitations')
                     .update({ 
                         status: 'accepted', 
-                        invited_user_id: existingUser.id,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', invite.id);
@@ -235,12 +235,11 @@
                 // Wait a moment for the profile to be created by database trigger
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // Mark invitation as accepted
+                // ✅ FIXED: No invited_user_id column
                 const { error: updateError } = await supabaseClient
                     .from('invitations')
                     .update({ 
                         status: 'accepted', 
-                        invited_user_id: authData.user.id,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', invite.id);
