@@ -33,71 +33,101 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+    const SUPABASE_URL  = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
-    
+
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const appDiv = document.getElementById('app');
+    const urlParams      = new URLSearchParams(window.location.search);
+    const token          = urlParams.get('token');
+    const appDiv         = document.getElementById('app');
 
-    console.log('Token:', token);
+    /* ─── Get inviter's profile ID from their email ─── */
+    async function getInviterIdFromEmail(email) {
+        if (!email) {
+            console.error('getInviterIdFromEmail: no email provided');
+            return null;
+        }
+        const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
 
-    async function createConnection(invite, invitedUserId, inviterUserId) {
-        console.log('Creating connection in connected_users table...');
-        console.log('Invited User ID:', invitedUserId);
-        console.log('Inviter User ID:', inviterUserId);
-        
-        // Validate IDs are different
-        if (invitedUserId === inviterUserId) {
-            console.error('Cannot create connection with same user');
+        if (error) {
+            console.error('Failed to lookup inviter profile:', error);
+            return null;
+        }
+        if (!data) {
+            console.error('No profile found for inviter email:', email);
+            return null;
+        }
+        console.log('Inviter profile ID found:', data.id);
+        return data.id;
+    }
+
+    /* ─── Create connection between two users ─── */
+    async function createConnection(invitedUserId, inviterUserId) {
+        console.log('Creating connection — invited:', invitedUserId, 'inviter:', inviterUserId);
+
+        if (!invitedUserId || !inviterUserId) {
+            console.error('createConnection: missing user ID(s)', { invitedUserId, inviterUserId });
             return false;
         }
-        
-        // Order IDs alphabetically to satisfy the constraint
-        let userA, userB;
-        if (invitedUserId < inviterUserId) {
-            userA = invitedUserId;
-            userB = inviterUserId;
-        } else {
-            userA = inviterUserId;
-            userB = invitedUserId;
+
+        if (invitedUserId === inviterUserId) {
+            console.error('createConnection: same user, skipping');
+            return false;
         }
-        
-        console.log('Ordered as - user_a:', userA, 'user_b:', userB);
-        
+
+        // Always order alphabetically to satisfy unique constraint
+        const [userA, userB] = invitedUserId < inviterUserId
+            ? [invitedUserId, inviterUserId]
+            : [inviterUserId, invitedUserId];
+
+        console.log('Ordered — user_a:', userA, 'user_b:', userB);
+
         // Check if connection already exists
-        const { data: existingConnection, error: checkError } = await supabaseClient
+        const { data: existing } = await supabaseClient
             .from('connected_users')
             .select('id')
             .eq('user_a', userA)
             .eq('user_b', userB)
             .maybeSingle();
-        
-        if (existingConnection) {
-            console.log('Connection already exists in connected_users');
+
+        if (existing) {
+            console.log('Connection already exists:', existing.id);
             return true;
         }
-        
-        // Create single connection record (ordered correctly)
-        const { data: connection, error: connectionError } = await supabaseClient
+
+        const { data, error } = await supabaseClient
             .from('connected_users')
-            .insert({
-                user_a: userA,
-                user_b: userB,
-                connected_at: new Date().toISOString()
-            })
+            .insert({ user_a: userA, user_b: userB, connected_at: new Date().toISOString() })
             .select();
-        
-        if (connectionError) {
-            console.error('Failed to create connection in connected_users:', connectionError);
+
+        if (error) {
+            console.error('Failed to create connection:', error);
             return false;
         }
-        
-        console.log('Connection created successfully in connected_users:', connection);
+
+        console.log('Connection created successfully:', data);
         return true;
     }
 
+    /* ─── Mark invitation accepted ─── */
+    async function acceptInvitation(inviteId) {
+        const { error } = await supabaseClient
+            .from('invitations')
+            .update({ status: 'accepted', updated_at: new Date().toISOString() })
+            .eq('id', inviteId);
+
+        if (error) {
+            console.error('Failed to update invitation status:', error);
+            return false;
+        }
+        return true;
+    }
+
+    /* ─── Main verification flow ─── */
     async function verifyAndAccept() {
         if (!token) {
             showError('No invitation token found in the link');
@@ -112,22 +142,19 @@
                 .maybeSingle();
 
             console.log('Invite data:', invite);
-            console.log('Error:', inviteError);
+
+            if (inviteError) {
+                console.error('Invite fetch error:', inviteError);
+                showError('System error. Please try again later.');
+                return;
+            }
 
             if (!invite) {
                 showError('Invalid or expired invitation link');
                 return;
             }
 
-            if (inviteError) {
-                showError('System error. Please try again later.');
-                return;
-            }
-
-            const expiresAt = new Date(invite.expires_at);
-            const now = new Date();
-            
-            if (expiresAt < now) {
+            if (new Date(invite.expires_at) < new Date()) {
                 showError('This invitation has expired');
                 return;
             }
@@ -137,6 +164,14 @@
                 return;
             }
 
+            // ── KEY FIX: Lookup inviter's user ID from their email ──
+            const inviterUserId = await getInviterIdFromEmail(invite.inviter_email);
+            if (!inviterUserId) {
+                // Non-fatal — still accept invite, just skip connection
+                console.warn('Could not find inviter profile — connection will be skipped');
+            }
+
+            // Check if invited user already has an account
             const { data: existingUser } = await supabaseClient
                 .from('profiles')
                 .select('id, email, first_name, last_name')
@@ -144,40 +179,35 @@
                 .maybeSingle();
 
             if (existingUser) {
-                console.log('Existing user found:', existingUser);
-                
-                const { error: updateError } = await supabaseClient
-                    .from('invitations')
-                    .update({ 
-                        status: 'accepted', 
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', invite.id);
+                console.log('Existing user found:', existingUser.id);
 
-                if (updateError) {
-                    console.error('Update error:', updateError);
+                const accepted = await acceptInvitation(invite.id);
+                if (!accepted) {
                     showError('Failed to accept invitation. Please try again.');
                     return;
                 }
-                
-                // Create connection between users
-                await createConnection(invite, existingUser.id, invite.invited_by);
-                
+
+                if (inviterUserId) {
+                    await createConnection(existingUser.id, inviterUserId);
+                }
+
                 showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`, true);
             } else {
-                showSignupForm(invite);
+                // New user — show signup form, pass inviterUserId along
+                showSignupForm(invite, inviterUserId);
             }
 
         } catch (err) {
-            console.error('Error:', err);
+            console.error('Unexpected error:', err);
             showError('Something went wrong. Please try again.');
         }
     }
 
-    function showSignupForm(invite) {
-        const nameParts = (invite.invited_name || '').split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
+    /* ─── Signup form for new users ─── */
+    function showSignupForm(invite, inviterUserId) {
+        const nameParts   = (invite.invited_name || '').split(' ');
+        const firstName   = nameParts[0] || '';
+        const lastName    = nameParts.slice(1).join(' ') || '';
         const roleDisplay = invite.type === 'professional' ? 'Professional' : 'Family Member';
 
         appDiv.innerHTML = `
@@ -187,7 +217,6 @@
                 <strong>${escapeHtml(invite.inviter_name || 'Someone')}</strong> (${invite.inviter_role || 'User'})<br>
                 has invited you to join as a <strong>${roleDisplay}</strong>
             </div>
-            
             <form id="signupForm">
                 <div class="name-row">
                     <div class="field">
@@ -199,63 +228,47 @@
                         <input type="text" id="lastName" placeholder="Last name" value="${escapeHtml(lastName)}" required>
                     </div>
                 </div>
-                
                 <div class="field">
                     <label>Email</label>
                     <input type="email" id="email" value="${escapeHtml(invite.invited_email)}" readonly style="background:#f5f5f5">
                 </div>
-                
                 <div class="field">
                     <label>Password *</label>
                     <input type="password" id="password" placeholder="Create a password (min. 6 characters)" required>
                 </div>
-                
                 <div class="field">
                     <label>Confirm Password *</label>
                     <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
                 </div>
-                
-                <button type="submit" id="signupBtn">Create Account & Accept Invitation</button>
+                <button type="submit" id="signupBtn">Create Account &amp; Accept Invitation</button>
                 <button type="button" class="btn-secondary" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Cancel</button>
             </form>
         `;
 
-        const form = document.getElementById('signupForm');
-        form.onsubmit = async (e) => {
+        document.getElementById('signupForm').onsubmit = async (e) => {
             e.preventDefault();
-            
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
 
-            if (!firstName || !lastName) {
-                alert('Please enter your first and last name');
-                return;
-            }
+            const fn  = document.getElementById('firstName').value.trim();
+            const ln  = document.getElementById('lastName').value.trim();
+            const pwd = document.getElementById('password').value;
+            const cpwd= document.getElementById('confirmPassword').value;
 
-            if (!password || password.length < 6) {
-                alert('Please create a password with at least 6 characters');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
+            if (!fn || !ln)        { alert('Please enter your first and last name'); return; }
+            if (pwd.length < 6)    { alert('Password must be at least 6 characters'); return; }
+            if (pwd !== cpwd)      { alert('Passwords do not match'); return; }
 
             const btn = document.getElementById('signupBtn');
-            btn.disabled = true;
+            btn.disabled    = true;
             btn.textContent = 'Creating account...';
 
             try {
                 const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
                     email: invite.invited_email,
-                    password: password,
+                    password: pwd,
                     options: {
                         data: {
-                            first_name: firstName,
-                            last_name: lastName,
+                            first_name: fn,
+                            last_name:  ln,
                             role: invite.type === 'professional' ? 'professional' : 'parent'
                         }
                     }
@@ -263,44 +276,38 @@
 
                 if (signUpError) throw signUpError;
 
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Wait for profile trigger to run
+                await new Promise(resolve => setTimeout(resolve, 2500));
 
-                const { error: updateError } = await supabaseClient
-                    .from('invitations')
-                    .update({ 
-                        status: 'accepted', 
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', invite.id);
+                await acceptInvitation(invite.id);
 
-                if (updateError) {
-                    console.error('Failed to update invitation:', updateError);
+                if (inviterUserId && authData?.user?.id) {
+                    await createConnection(authData.user.id, inviterUserId);
+                } else {
+                    console.warn('Missing IDs for connection — invited:', authData?.user?.id, 'inviter:', inviterUserId);
                 }
-                
-                // Create connection between users
-                await createConnection(invite, authData.user.id, invite.invited_by);
 
-                showSuccess(invite.inviter_name, `${firstName} ${lastName}`, false);
+                showSuccess(invite.inviter_name, `${fn} ${ln}`, false);
 
             } catch (err) {
+                console.error('Signup error:', err);
                 alert('Error creating account: ' + err.message);
-                btn.disabled = false;
+                btn.disabled    = false;
                 btn.textContent = 'Create Account & Accept Invitation';
             }
         };
     }
 
+    /* ─── UI helpers ─── */
     function showSuccess(inviterName, userName, isExistingUser) {
-        const message = isExistingUser 
+        const msg = isExistingUser
             ? `${escapeHtml(userName)} is now connected with <strong>${escapeHtml(inviterName)}</strong>`
             : `Welcome ${escapeHtml(userName)}! You are now connected with <strong>${escapeHtml(inviterName)}</strong>`;
 
         appDiv.innerHTML = `
             <div style="font-size:64px">🎉</div>
             <h2>Successfully Connected!</h2>
-            <div class="success">
-                ✅ ${message}
-            </div>
+            <div class="success">✅ ${msg}</div>
             <p style="margin:16px 0;color:#666;">You can now share updates, messages, and track progress together.</p>
             <button onclick="handleGoToDashboard()">Go to Dashboard</button>
         `;
@@ -311,15 +318,13 @@
             <div style="font-size:64px">❌</div>
             <h2>Invitation Error</h2>
             <div class="error">${escapeHtml(message)}</div>
-            <p style="color:#666; margin-top:16px;">Please contact the person who invited you for a new link.</p>
+            <p style="color:#666;margin-top:16px;">Please contact the person who invited you for a new link.</p>
             <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go to Homepage</button>
         `;
     }
 
     function handleGoToDashboard() {
-        // Force a cache-busting reload to refresh the connection data
-        const dashboardUrl = 'https://doulalink.doulalink-web.workers.dev/dashboard?refresh=' + Date.now();
-        window.location.href = dashboardUrl;
+        window.location.href = 'https://doulalink.doulalink-web.workers.dev/dashboard?refresh=' + Date.now();
     }
 
     function escapeHtml(text) {
@@ -329,7 +334,6 @@
         return div.innerHTML;
     }
 
-    // Start verification
     verifyAndAccept();
 </script>
 </body>
