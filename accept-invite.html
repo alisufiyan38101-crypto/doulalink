@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accept Invite — DoulaLink</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ✅ FIXED: Correct Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
-    /* Your existing styles - perfect! */
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:system-ui,sans-serif;background:#FFF0F4;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
     .card{background:white;max-width:450px;width:100%;padding:40px 32px;border-radius:32px;text-align:center;box-shadow:0 20px 60px rgba(244,105,138,0.15)}
-    .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
+    .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto;display:inline-block}
     @keyframes spin{to{transform:rotate(360deg)}}
     .error{background:#FFEBEE;color:#c0392b;padding:16px;border-radius:16px;margin:20px 0;border-left:4px solid #EF4444}
     .success{background:#E8F8F0;color:#2e7d32;padding:16px;border-radius:16px;margin:20px 0;border-left:4px solid #10B981}
@@ -24,37 +24,49 @@
     button{width:100%;padding:18px;background:linear-gradient(135deg,#F4698A,#E55A73);color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px;box-shadow:0 8px 24px #F4698A30;transition:transform .2s}
     button:hover{transform:translateY(-1px)}
     button:active{transform:translateY(0)}
+    button:disabled{opacity:0.6;cursor:not-allowed;transform:none}
     .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A;box-shadow:0 4px 12px #F4698A20}
     .name-row{display:flex;gap:16px}
     .name-row .field{flex:1}
     @media (max-width:480px){.name-row{flex-direction:column;gap:20px}}
     h2{font-size:28px;font-weight:800;color:#1C1C1E;margin-bottom:12px}
     p{font-size:15px;color:#666;line-height:1.6;margin-bottom:8px}
+    .debug{display:none;background:#f0f0f0;padding:10px;border-radius:8px;font-family:monospace;font-size:12px;margin:10px 0}
   </style>
 </head>
 <body>
 <div class="card" id="app">
   <div class="spinner"></div>
   <p>🔍 Verifying your invitation...</p>
+  <div class="debug" id="debug"></div>
 </div>
 
 <script>
-  // ✅ YOUR SUPABASE CREDENTIALS (CORRECT!)
+  // ✅ YOUR CREDENTIALS
   const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
   
-  // ✅ CORRECT CLIENT INIT
-  const sb = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  // ✅ FIXED: Correct global Supabase
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   const type = urlParams.get('type') || 'general';
   const app = document.getElementById('app');
+  const debug = document.getElementById('debug');
 
   let inviteData = null;
 
+  // Debug helper
+  function log(msg) {
+    console.log(msg);
+    debug.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+    debug.style.display = 'block';
+  }
+
   async function verifyInvite() {
-    console.log('🔍 Verifying token:', token);
+    log(`🔍 Starting verification for token: ${token}`);
     
     if (!token) {
       showError('❌ No invitation token found in URL');
@@ -62,45 +74,56 @@
     }
 
     try {
-      // ✅ FIXED: Correct table name 'invitations'
+      log('📡 Querying invitations table...');
+      
+      // ✅ FIXED: Correct table & query
       const { data, error } = await sb
-        .from('invitations')  // ✅ FIXED: was 'invites'
-        .select('*')
+        .from('invitations')
+        .select('*, invited_by:invited_by(*), inviter_name')
         .eq('token', token)
         .eq('status', 'pending')
         .single();
 
-      console.log('🔍 Invite data:', data, 'Error:', error);
+      log(`📊 Query result: data=${!!data}, error=${!!error}`);
 
       if (error || !data) {
+        log(`❌ No valid invite: ${error?.message || 'Not found'}`);
         showError('❌ Invalid or expired invitation link');
         return;
       }
 
       inviteData = data;
-      console.log('✅ Token VALID:', data.token);
+      log(`✅ VALID TOKEN FOUND: ${data.token} → ${data.invited_email}`);
 
       // Mark as accepted
-      await sb.from('invitations').update({ 
-        status: 'accepted',
-        accepted_at: new Date().toISOString()
-      }).eq('id', data.id);
+      const { error: updateError } = await sb
+        .from('invitations')
+        .update({ 
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', data.id);
+
+      if (updateError) log(`⚠️ Update error: ${updateError.message}`);
 
       // Check existing user
+      log('🔍 Checking existing user...');
       const { data: existingUser } = await sb
         .from('profiles')
-        .select('id, email, first_name')
+        .select('id, email, first_name, role')
         .eq('email', data.invited_email)
         .maybeSingle();
 
+      log(`👤 Existing user: ${!!existingUser}`);
+
       if (existingUser) {
-        showExistingUserForm(data);
+        showExistingUserForm(data, existingUser);
       } else {
         showNewUserForm(data);
       }
 
     } catch (err) {
-      console.error('💥 Verify error:', err);
+      log(`💥 ERROR: ${err.message}`);
       showError(`❌ Verification failed: ${err.message}`);
     }
   }
@@ -114,7 +137,7 @@
       <div style="font-size:56px; margin-bottom:20px; color:#10B981;">✨</div>
       <h2>Welcome to DoulaLink!</h2>
       <div class="inviter-name">${escapeHtml(invite.inviter_name || 'Your Care Team')}</div>
-      <p style="color:#666; margin-bottom:24px;">has invited you to join</p>
+      <p style="color:#666; margin-bottom:24px;">has invited you to join their care circle</p>
 
       <div class="name-row">
         <div class="field">
@@ -139,22 +162,23 @@
 
       <button id="createBtn">✅ Create Account & Connect</button>
       <p style="font-size:13px; color:#999; margin-top:16px;">
-        🔒 Secure • Your data stays private
+        🔒 Secure • Private • Professional
       </p>
     `;
 
     document.getElementById('createBtn').onclick = () => createNewAccount(token, invite);
   }
 
-  function showExistingUserForm(invite) {
+  function showExistingUserForm(invite, user) {
     app.innerHTML = `
       <div style="font-size:56px; margin-bottom:20px;">👋</div>
-      <h2>Welcome Back!</h2>
+      <h2>Welcome Back, ${escapeHtml(user.first_name || 'User')}!</h2>
       <div class="warning">
-        Account found for <strong>${escapeHtml(invite.invited_email)}</strong>
+        Account found: <strong>${escapeHtml(invite.invited_email)}</strong><br>
+        Role: <span style="color:#F4698A">${user.role || 'parent'}</span>
       </div>
       <div class="inviter-name">${escapeHtml(invite.inviter_name || 'Your Care Team')}</div>
-      <p style="color:#666; margin-bottom:24px;">Sign in to accept invitation</p>
+      <p style="color:#666; margin-bottom:24px;">Sign in to accept this invitation</p>
 
       <div class="field">
         <label>Password</label>
@@ -162,9 +186,6 @@
       </div>
 
       <button id="existingLoginBtn">🔑 Sign In & Connect</button>
-      <p style="font-size:13px; color:#999; margin-top:16px;">
-        <a href="/signup" style="color:#F4698A;">Create new account instead →</a>
-      </p>
     `;
 
     document.getElementById('existingLoginBtn').onclick = () => handleExistingLogin(token, invite.invited_email);
@@ -177,13 +198,17 @@
     const password = document.getElementById('password').value;
 
     if (!fname || !lname || password.length < 8) {
-      alert('Please fill all fields (password 8+ chars)');
+      alert('Please fill all fields correctly');
       return;
     }
 
-    app.innerHTML = '<div class="spinner"></div><p>🎉 Creating account...</p>';
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
 
     try {
+      log('👤 Creating new user...');
+      
       const { data: authData, error: authError } = await sb.auth.signUp({
         email,
         password,
@@ -199,6 +224,8 @@
 
       if (authError) throw authError;
 
+      log(`✅ User created: ${authData.user.id}`);
+
       // Update invite
       await sb.from('invitations')
         .update({ 
@@ -208,13 +235,17 @@
         })
         .eq('token', token);
 
-      showSuccess(invite.inviter_name);
+      showSuccess(invite.inviter_name, fname);
     } catch (err) {
-      console.error(err);
+      log(`❌ Create error: ${err.message}`);
+      btn.disabled = false;
+      btn.textContent = '✅ Create Account & Connect';
+      
       if (err.message.includes('already registered')) {
-        showExistingUserForm(invite);
+        alert('Account exists! Try Sign In.');
+        location.reload();
       } else {
-        app.innerHTML = `<div class="error">❌ ${err.message}</div><button onclick="location.reload()">Retry</button>`;
+        alert(err.message);
       }
     }
   }
@@ -222,6 +253,10 @@
   async function handleExistingLogin(token, email) {
     const password = document.getElementById('existingPassword').value;
     if (!password) return alert('Enter password');
+
+    const btn = document.getElementById('existingLoginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
 
     try {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
@@ -235,17 +270,21 @@
         })
         .eq('token', token);
 
-      showSuccess(inviteData.inviter_name);
+      showSuccess(inviteData.inviter_name, 'you');
     } catch (err) {
-      app.innerHTML = `<div class="error">❌ ${err.message}</div><button onclick="location.reload()">Retry</button>`;
+      btn.disabled = false;
+      btn.textContent = '🔑 Sign In & Connect';
+      alert(err.message);
     }
   }
 
-  function showSuccess(inviterName) {
+  function showSuccess(inviterName, userName) {
     app.innerHTML = `
       <div style="font-size:64px; margin:20px 0; color:#10B981;">🎉</div>
       <h2>Connected Successfully!</h2>
-      <div class="success">✅ You're now connected with ${escapeHtml(inviterName)}</div>
+      <div class="success">
+        ✅ ${userName === 'you' ? 'You are' : userName + ' is'} now connected with ${escapeHtml(inviterName)}
+      </div>
       <button onclick="downloadApp()">Open DoulaLink App →</button>
       <div style="display:flex;gap:12px;margin-top:24px;justify-content:center;flex-wrap:wrap;">
         <a href="https://apps.apple.com/app/doulalink" style="flex:1;background:#000;color:#fff;padding:12px 20px;border-radius:50px;text-decoration:none;font-size:14px;text-align:center;min-width:140px;">🍎 App Store</a>
@@ -260,12 +299,12 @@
 
   function escapeHtml(str) {
     const div = document.createElement('div');
-    div.textContent = str;
+    div.textContent = str || '';
     return div.innerHTML;
   }
 
-  // 🔥 START VERIFICATION
-  verifyInvite();
+  // 🔥 AUTO START
+  window.onload = verifyInvite;
 </script>
 </body>
 </html>
