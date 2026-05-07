@@ -13,35 +13,24 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     .error{background:#FFEBEE;color:#c0392b;padding:20px;border-radius:20px;margin:24px 0;border-left:5px solid #EF4444;font-weight:500}
     .success{background:#E8F8F0;color:#2e7d32;padding:20px;border-radius:20px;margin:24px 0;border-left:5px solid #10B981;font-weight:500}
-    .warning{background:#FFF8E1;color:#E6A700;padding:20px;border-radius:20px;margin:24px 0;border-left:5px solid #F59E0B;font-weight:500}
-    .inviter-name{font-size:26px;font-weight:800;color:#F4698A;margin:24px 0 16px}
-    .field{margin-bottom:24px;text-align:left}
-    label{display:block;font-size:14px;font-weight:600;color:#1C1C1E;margin-bottom:10px}
-    input{width:100%;padding:18px 20px;border:2px solid #EDE0E4;border-radius:18px;font-size:16px;background:#F9F9FB;transition:all .2s}
-    input:focus{outline:none;border-color:#F4698A;background:white;box-shadow:0 0 0 4px #F4698A15}
-    input[readonly]{background:#F0F0F2;color:#666;font-style:italic}
-    button{width:100%;padding:20px;background:linear-gradient(135deg,#F4698A,#E55A73);color:white;border:none;border-radius:50px;font-size:17px;font-weight:700;cursor:pointer;margin-top:24px;box-shadow:0 10px 30px #F4698A30;transition:all .2s}
-    button:hover{transform:translateY(-2px);box-shadow:0 12px 35px #F4698A35}
-    button:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
-    .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A;box-shadow:0 6px 20px #F4698A20}
-    .name-row{display:flex;gap:16px}
-    .name-row .field{flex:1}
-    @media (max-width:480px){.name-row{flex-direction:column;gap:20px}}
-    h2{font-size:30px;font-weight:800;color:#1C1C1E;margin-bottom:16px}
-    p{font-size:16px;color:#666;line-height:1.6;margin-bottom:12px}
-    .debug{position:fixed;top:10px;right:10px;background:#000;color:#0f0;font-family:monospace;font-size:12px;padding:10px;border-radius:8px;max-width:300px;max-height:200px;overflow:auto;z-index:9999}
-    .debug.hide{display:none}
+    button{width:100%;padding:20px;background:linear-gradient(135deg,#F4698A,#E55A73);color:white;border:none;border-radius:50px;font-size:17px;font-weight:700;cursor:pointer;margin-top:24px}
+    button:disabled{opacity:0.6;cursor:not-allowed}
+    input{width:100%;padding:14px;border:2px solid #EDE0E4;border-radius:12px;font-size:16px;margin-bottom:16px}
+    input:focus{outline:none;border-color:#F4698A}
+    .field{margin-bottom:16px;text-align:left}
+    label{font-size:14px;font-weight:600;color:#1C1C1E;margin-bottom:8px;display:block}
+    .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A}
+    h2{font-size:28px;font-weight:800;color:#1C1C1E;margin-bottom:16px}
+    .inviter-name{font-size:22px;font-weight:800;color:#F4698A;margin:16px 0}
   </style>
 </head>
 <body>
 <div class="card" id="app">
   <div class="spinner"></div>
-  <h3>🔍 Verifying invitation...</h3>
+  <p style="margin-top:20px">Verifying invitation...</p>
 </div>
-<div class="debug" id="debug"></div>
 
 <script>
-  // ✅ SUPABASE CONFIG
   const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
   
@@ -49,125 +38,175 @@
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   const app = document.getElementById('app');
-  const debugEl = document.getElementById('debug');
 
-  let inviteData = null;
+  console.log('Token from URL:', token);
 
-  // ✅ FIXED: Debug + Error Functions
-  function log(msg, type = 'info') {
-    console.log(`[${type.toUpperCase()}] ${msg}`);
-    debugEl.innerHTML += `<div style="color:${type==='error'?'#f00':type==='success'?'#0f0':'#fff'}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-    debugEl.scrollTop = debugEl.scrollHeight;
-  }
-
-  function showError(message) {
-    app.innerHTML = `
-      <div style="font-size:64px; margin-bottom:24px; color:#EF4444;">❌</div>
-      <h2>Invalid Invitation</h2>
-      <div class="error">${message}</div>
-      <p style="color:#999; margin-top:20px;">Contact your inviter or try creating a new invitation.</p>
-      <button class="btn-secondary" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">← Go Home</button>
-    `;
-    log('❌ Showing error screen', 'error');
-  }
-
-  function showSuccess(inviterName, userName) {
-    app.innerHTML = `
-      <div style="font-size:72px; margin:24px 0; color:#10B981;">🎉</div>
-      <h2>Connected Successfully!</h2>
-      <div class="success">
-        ✅ ${userName === 'you' ? 'You are' : userName + ' is'} now connected with <strong>${escapeHtml(inviterName)}</strong>
-      </div>
-      <button onclick="downloadApp()">Open DoulaLink App →</button>
-      <div style="display:flex;gap:16px;margin-top:32px;justify-content:center;flex-wrap:wrap;">
-        <a href="https://apps.apple.com/app/doulalink" style="flex:1;background:#000;color:#fff;padding:16px 24px;border-radius:50px;text-decoration:none;font-size:15px;text-align:center;min-width:160px;box-shadow:0 8px 24px #00000030">🍎 App Store</a>
-        <a href="https://play.google.com/store/apps/details?id=com.doulalink.app" style="flex:1;background:#000;color:#fff;padding:16px 24px;border-radius:50px;text-decoration:none;font-size:15px;text-align:center;min-width:160px;box-shadow:0 8px 24px #00000030">▶ Play Store</a>
-      </div>
-    `;
-    log('✅ Success screen shown', 'success');
-  }
-
-  // ✅ FIXED: Simple Query (No joins)
-  async function verifyInvite() {
-    log(`🔍 Verifying token: ${token?.substring(0,8)}...`);
-
+  async function verifyInvitation() {
     if (!token) {
-      showError('No invitation token found in URL');
+      app.innerHTML = `
+        <div style="font-size:64px">❌</div>
+        <h2>Invalid Link</h2>
+        <div class="error">No invitation token found</div>
+        <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go Home</button>
+      `;
       return;
     }
 
     try {
-      // ✅ FIXED: SIMPLE QUERY - No complex joins
+      // Check invitation
       const { data, error } = await sb
         .from('invitations')
-        .select('id, token, invited_email, invited_name, inviter_name, type, status, expires_at, created_at')
+        .select('*')
         .eq('token', token)
         .eq('status', 'pending')
-        .gte('expires_at', new Date().toISOString())  // Not expired
-        .maybeSingle();
+        .single();
 
-      log(`📊 Result: data=${!!data}, error=${!!error}, rows=${data ? 1 : 0}`);
+      console.log('Invitation data:', data);
+      console.log('Error:', error);
 
-      if (error) {
-        log(`❌ Query error: ${error.message}`, 'error');
-        showError('Database query failed');
+      if (error || !data) {
+        app.innerHTML = `
+          <div style="font-size:64px">❌</div>
+          <h2>Invalid Invitation</h2>
+          <div class="error">This invitation link is invalid or has expired</div>
+          <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go Home</button>
+        `;
         return;
       }
 
-      if (!data) {
-        log('❌ No matching invitation found', 'error');
-        showError('Invalid token or invitation expired');
-        return;
-      }
-
-      inviteData = data;
-      log(`✅ VALID INVITE: ${data.invited_email} by ${data.inviter_name}`);
-
-      // Mark accepted
-      const { error: updateError } = await sb
-        .from('invitations')
-        .update({ status: 'accepted', accepted_at: new Date().toISOString() })
-        .eq('id', data.id);
-
-      log(`📝 Update ${updateError ? 'FAILED' : 'SUCCESS'}`);
-
-      // Check existing user
+      // Check if user already exists
       const { data: existingUser } = await sb
         .from('profiles')
-        .select('id, email, first_name, role')
+        .select('id, email')
         .eq('email', data.invited_email)
         .maybeSingle();
 
-      log(`👤 Existing: ${!!existingUser} (${data.invited_email})`);
-
       if (existingUser) {
-        showExistingUserForm(data, existingUser);
+        // User exists - show login/success message
+        app.innerHTML = `
+          <div style="font-size:64px">🎉</div>
+          <h2>Welcome Back!</h2>
+          <div class="success">
+            You've been connected to ${data.inviter_name || 'your care team'}!
+          </div>
+          <button onclick="window.location.href='doulalink://app'">Open App</button>
+          <button class="btn-secondary" style="margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Continue to Web</button>
+        `;
+        
+        // Mark invitation as accepted
+        await sb.from('invitations').update({ status: 'accepted' }).eq('id', data.id);
       } else {
-        showNewUserForm(data);
+        // New user - show signup form
+        app.innerHTML = `
+          <div style="font-size:64px">✨</div>
+          <h2>Create Your Account</h2>
+          <div class="inviter-name">${data.inviter_name || 'Someone'}</div>
+          <p style="margin-bottom:24px">invited you to join their care team</p>
+          
+          <div class="field">
+            <label>First Name</label>
+            <input type="text" id="firstName" placeholder="First name" value="${data.invited_name?.split(' ')[0] || ''}">
+          </div>
+          
+          <div class="field">
+            <label>Last Name</label>
+            <input type="text" id="lastName" placeholder="Last name" value="${data.invited_name?.split(' ').slice(1).join(' ') || ''}">
+          </div>
+          
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="Email" value="${data.invited_email}" readonly style="background:#f5f5f5">
+          </div>
+          
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Create a password">
+          </div>
+          
+          <button id="signupBtn">Create Account & Accept Invitation</button>
+          <button class="btn-secondary" style="margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Cancel</button>
+        `;
+        
+        document.getElementById('signupBtn').onclick = async () => {
+          const firstName = document.getElementById('firstName').value;
+          const lastName = document.getElementById('lastName').value;
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          
+          if (!firstName || !lastName || !password) {
+            alert('Please fill all fields');
+            return;
+          }
+          
+          const btn = document.getElementById('signupBtn');
+          btn.disabled = true;
+          btn.textContent = 'Creating account...';
+          
+          try {
+            // Sign up user
+            const { data: authData, error: signUpError } = await sb.auth.signUp({
+              email: email,
+              password: password,
+              options: {
+                data: {
+                  first_name: firstName,
+                  last_name: lastName,
+                  role: data.type === 'professional' ? 'professional' : 'parent'
+                }
+              }
+            });
+            
+            if (signUpError) throw signUpError;
+            
+            // Create profile
+            const { error: profileError } = await sb
+              .from('profiles')
+              .insert({
+                id: authData.user.id,
+                email: email,
+                first_name: firstName,
+                last_name: lastName,
+                role: data.type === 'professional' ? 'professional' : 'parent'
+              });
+            
+            if (profileError) throw profileError;
+            
+            // Mark invitation as accepted
+            await sb.from('invitations').update({ 
+              status: 'accepted',
+              invited_user_id: authData.user.id
+            }).eq('id', data.id);
+            
+            app.innerHTML = `
+              <div style="font-size:64px">🎉</div>
+              <h2>Account Created!</h2>
+              <div class="success">
+                You've been successfully connected to ${data.inviter_name}!
+              </div>
+              <button onclick="window.location.href='doulalink://app'">Open App</button>
+              <button class="btn-secondary" style="margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Continue to Web</button>
+            `;
+          } catch (err) {
+            alert('Error: ' + err.message);
+            btn.disabled = false;
+            btn.textContent = 'Create Account & Accept Invitation';
+          }
+        };
       }
-
+      
     } catch (err) {
-      log(`💥 FATAL: ${err.message}`, 'error');
-      showError('Verification failed - please try again');
+      console.error('Error:', err);
+      app.innerHTML = `
+        <div style="font-size:64px">❌</div>
+        <h2>Error</h2>
+        <div class="error">Something went wrong: ${err.message}</div>
+        <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go Home</button>
+      `;
     }
   }
-
-  function showNewUserForm(invite) {
-    const nameParts = (invite.invited_name || '').split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    app.innerHTML = `
-      <div style="font-size:64px; margin-bottom:24px; color:#10B981;">✨</div>
-      <h2>Join DoulaLink!</h2>
-      <div class="inviter-name">${escapeHtml(invite.inviter_name || 'Your Care Team')}</div>
-      <p style="color:#666; margin-bottom:28px;">invited you to their care circle</p>
-
-      <div class="name-row">
-        <div class="field">
-          <label>First Name *</label>
-          <input type="text" id="fname" placeholder="First name" value="${escapeHtml(firstName)}" required>
-        </div>
-        <div class="field">
-          <label>Last Name *</label>
-          <input type="text" id="lname" placeholder="Last name" value="${escapeHtml(lastName)}" required
+  
+  // Start verification
+  verifyInvitation();
+</script>
+</body>
+</html>
