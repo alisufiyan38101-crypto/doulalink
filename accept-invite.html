@@ -6,6 +6,7 @@
   <title>Accept Invite — DoulaLink</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
+    /* Same styles as before */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, sans-serif; background: #FFF0F4;
@@ -33,6 +34,11 @@
     }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary { background: white; color: #F4698A; border: 2px solid #F4698A; }
+    .btn-login { 
+      background: linear-gradient(135deg, #4F46E5, #7C3AED); 
+      margin-top: 12px;
+      font-size: 15px;
+    }
     input {
       width: 100%; padding: 14px; border: 2px solid #EDE0E4;
       border-radius: 12px; font-size: 16px; margin-bottom: 16px;
@@ -50,6 +56,15 @@
       text-align: left; font-size: 14px; color: #555; line-height: 1.5;
     }
     .info-box strong { color: #F4698A; }
+    .divider { 
+      text-align: center; margin: 24px 0; 
+      color: #999; position: relative; font-size: 14px;
+    }
+    .divider::before {
+      content: ''; position: absolute; top: 50%; left: 0; right: 0;
+      height: 1px; background: #EDE0E4;
+    }
+    .divider span { background: white; padding: 0 16px; }
     h2 { margin-bottom: 8px; font-size: 22px; color: #1C1C1E; }
     p { color: #666; margin-bottom: 16px; }
   </style>
@@ -173,12 +188,97 @@
         <input type="password" id="confirmPassword" placeholder="Re-enter password" />
       </div>
       <button id="signupBtn" onclick="submitSignup('${escapeHtml(invite.invited_email)}', '${escapeHtml(invite.id)}', '${escapeHtml(invite.type)}', '${escapeHtml(invite.inviter_name)}', '${escapeHtml(inviterUserId || '')}')">
-        Create Account &amp; Accept Invitation
+        Create Account & Accept Invitation
       </button>
-      <button class="btn-secondary" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'" style="margin-top:10px">
-        Cancel
+      
+      <div class="divider"><span>or</span></div>
+      
+      <button class="btn-login" onclick="showLoginForm('${escapeHtml(invite.invited_email)}', '${escapeHtml(invite.id)}', '${escapeHtml(invite.inviter_name)}', '${escapeHtml(inviterUserId || '')}')">
+        Already have an account? Login
       </button>
     `;
+  }
+
+  /* ── Login form ── */
+  function showLoginForm(invitedEmail, inviteId, inviterName, inviterUserId) {
+    appDiv.innerHTML = `
+      <div style="font-size:56px">🔐</div>
+      <h2 style="margin-bottom:16px">Login to Accept Invitation</h2>
+      <div class="info-box">
+        <strong>${escapeHtml(inviterName || 'Someone')}</strong> invited you.<br>
+        Login with your account to accept the invitation.
+      </div>
+      <div id="loginError" class="error" style="display:none;"></div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" value="${escapeHtml(invitedEmail)}" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" />
+      </div>
+      <button id="loginBtn" onclick="submitLogin('${escapeHtml(inviteId)}', '${escapeHtml(inviterName)}', '${escapeHtml(inviterUserId || '')}')">
+        Login & Accept Invitation
+      </button>
+      <button class="btn-secondary" onclick="showSignupFormFromLogin('${escapeHtml(invitedEmail)}', '${escapeHtml(inviteId)}', '${escapeHtml(inviterName)}', '${escapeHtml(inviterUserId || '')}')" style="margin-top:12px">
+        Don't have an account? Sign up
+      </button>
+    `;
+  }
+
+  function showSignupFormFromLogin(invitedEmail, inviteId, inviterName, inviterUserId) {
+    // Reconstruct invite object for signup form
+    const invite = { invited_email: invitedEmail, id: inviteId, inviter_name: inviterName };
+    showSignupForm(invite, inviterUserId);
+  }
+
+  async function submitLogin(inviteId, inviterName, inviterUserId) {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errDiv = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    if (!email || !password) {
+      errDiv.textContent = 'Please enter email and password.';
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    errDiv.style.display = 'none';
+
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      // Accept invitation and create connection
+      await acceptInvitation(inviteId);
+      
+      if (inviterUserId && data.user?.id) {
+        await createConnection(data.user.id, inviterUserId);
+      }
+
+      // Get user profile name
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('full_name')
+        .eq('id', data.user.id)
+        .single();
+
+      showSuccess(inviterName, profile?.full_name || data.user.email);
+
+    } catch (err) {
+      console.error('Login error:', err);
+      btn.disabled = false;
+      btn.textContent = 'Login & Accept Invitation';
+      errDiv.textContent = err.message || 'Login failed. Please check your credentials.';
+      errDiv.style.display = 'block';
+    }
   }
 
   async function submitSignup(invitedEmail, inviteId, inviteType, inviterName, inviterUserId) {
@@ -213,17 +313,7 @@
         }
       });
 
-      if (signUpError) {
-        // Already registered — redirect to login with invite token
-        if (signUpError.message.toLowerCase().includes('already registered')) {
-          showFormError('Account already exists. Redirecting to login...');
-          setTimeout(() => {
-            window.location.href = `login.html?email=${encodeURIComponent(invitedEmail)}&invite_token=${encodeURIComponent(token)}`;
-          }, 1500);
-          return;
-        }
-        throw signUpError;
-      }
+      if (signUpError) throw signUpError;
 
       // Wait for DB trigger to create profile
       await new Promise(r => setTimeout(r, 2500));
@@ -271,20 +361,7 @@
 
       const inviterUserId = await getInviterIdFromEmail(invite.inviter_email);
 
-      // Check if invited user already has an account
-      const { data: existingUser } = await sb
-        .from('profiles')
-        .select('id, email, first_name, last_name')
-        .eq('email', invite.invited_email)
-        .maybeSingle();
-
-      if (existingUser) {
-        // ✅ Already registered — redirect to login with invite token
-        window.location.href = `login.html?email=${encodeURIComponent(invite.invited_email)}&invite_token=${encodeURIComponent(token)}`;
-        return;
-      }
-
-      // New user — show signup form
+      // Always show signup form with login option (better UX)
       showSignupForm(invite, inviterUserId);
 
     } catch (err) {
