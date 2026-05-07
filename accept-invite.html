@@ -43,6 +43,42 @@
 
     console.log('Token:', token);
 
+    async function createConnection(invite, userId, connectedUserId) {
+        // Check if connection already exists
+        const { data: existingConnection, error: checkError } = await supabaseClient
+            .from('connections')
+            .select('id')
+            .or(`user_id.eq.${userId},connected_user_id.eq.${userId}`)
+            .or(`user_id.eq.${connectedUserId},connected_user_id.eq.${connectedUserId}`)
+            .maybeSingle();
+        
+        if (existingConnection) {
+            console.log('Connection already exists');
+            return true;
+        }
+        
+        const connectionType = invite.type === 'professional' ? 'professional' : 'family';
+        
+        const { data: connection, error: connectionError } = await supabaseClient
+            .from('connections')
+            .insert({
+                user_id: userId,
+                connected_user_id: connectedUserId,
+                connection_type: connectionType,
+                invited_by: invite.invited_by,
+                status: 'active'
+            })
+            .select();
+        
+        if (connectionError) {
+            console.error('Failed to create connection:', connectionError);
+            return false;
+        }
+        
+        console.log('Connection created:', connection);
+        return true;
+    }
+
     async function verifyAndAccept() {
         if (!token) {
             showError('No invitation token found in the link');
@@ -91,7 +127,6 @@
             if (existingUser) {
                 console.log('Existing user found:', existingUser);
                 
-                // ✅ UPDATED: No invited_user_id column
                 const { error: updateError } = await supabaseClient
                     .from('invitations')
                     .update({ 
@@ -105,7 +140,10 @@
                     showError('Failed to accept invitation. Please try again.');
                     return;
                 }
-
+                
+                // Create connection between users
+                await createConnection(invite, existingUser.id, invite.invited_by);
+                
                 showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`, true);
             } else {
                 showSignupForm(invite);
@@ -208,7 +246,6 @@
 
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // ✅ UPDATED: No invited_user_id column
                 const { error: updateError } = await supabaseClient
                     .from('invitations')
                     .update({ 
@@ -220,6 +257,9 @@
                 if (updateError) {
                     console.error('Failed to update invitation:', updateError);
                 }
+                
+                // Create connection between users
+                await createConnection(invite, authData.user.id, invite.invited_by);
 
                 showSuccess(invite.inviter_name, `${firstName} ${lastName}`, false);
 
