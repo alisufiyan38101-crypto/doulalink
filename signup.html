@@ -419,9 +419,11 @@
       if (msg.toLowerCase().includes('already registered')) {
         msg = 'An account with this email already exists. Redirecting to sign in...';
         showError(msg);
-        setTimeout(() => {
-          window.location.href = `login.html?email=${encodeURIComponent(email)}`;
-        }, 2000);
+       const currentToken = new URLSearchParams(window.location.search).get('invite_token') || '';
+const loginUrl = `login.html?email=${encodeURIComponent(email)}${currentToken ? '&invite_token=' + encodeURIComponent(currentToken) : ''}`;
+setTimeout(() => {
+    window.location.href = loginUrl;
+}, 2000);
       } else {
         showError(msg);
       }
