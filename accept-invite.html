@@ -1,316 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Accept Invite — DoulaLink</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:system-ui,sans-serif;background:#FFF0F4;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
-    .card{background:white;max-width:500px;width:100%;padding:40px 32px;border-radius:32px;text-align:center;box-shadow:0 20px 60px rgba(244,105,138,0.15)}
-    .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto;display:inline-block}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .error{background:#FFEBEE;color:#c0392b;padding:15px;border-radius:16px;margin:16px 0;border-left:4px solid #EF4444;font-size:14px;text-align:left}
-    .success{background:#E8F8F0;color:#2e7d32;padding:20px;border-radius:20px;margin:24px 0}
-    button{width:100%;padding:18px;background:linear-gradient(135deg,#F4698A,#E55A73);color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
-    input{width:100%;padding:14px;border:2px solid #EDE0E4;border-radius:12px;font-size:16px;margin-bottom:16px;box-sizing:border-box}
-    .field{margin-bottom:16px;text-align:left}
-    label{font-size:14px;font-weight:600;color:#1C1C1E;margin-bottom:8px;display:block}
-    .debug{background:#1a1a1a;color:#0f0;padding:12px;border-radius:8px;font-family:monospace;font-size:11px;margin-top:20px;text-align:left;max-height:200px;overflow:auto}
-    .debug-title{font-weight:bold;margin-bottom:8px;color:#fff}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accept Invite — DoulaLink</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:#FFF0F4;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+        .card{background:white;max-width:450px;width:100%;padding:40px 32px;border-radius:32px;text-align:center;box-shadow:0 20px 60px rgba(244,105,138,0.15)}
+        .spinner{width:48px;height:48px;border:3px solid #F4698A20;border-top-color:#F4698A;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto;display:inline-block}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .error{background:#FFEBEE;color:#c0392b;padding:15px;border-radius:16px;margin:16px 0}
+        .success{background:#E8F8F0;color:#2e7d32;padding:20px;border-radius:20px;margin:24px 0}
+        button{width:100%;padding:18px;background:linear-gradient(135deg,#F4698A,#E55A73);color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
+        .btn-secondary{background:white;color:#F4698A;border:2px solid #F4698A}
+        input{width:100%;padding:14px;border:2px solid #EDE0E4;border-radius:12px;font-size:16px;margin-bottom:16px;box-sizing:border-box}
+        input:focus{outline:none;border-color:#F4698A}
+        .field{margin-bottom:16px;text-align:left}
+        label{font-size:14px;font-weight:600;color:#1C1C1E;margin-bottom:8px;display:block}
+        .name-row{display:flex;gap:16px}
+        .name-row .field{flex:1}
+        @media (max-width:480px){.name-row{flex-direction:column;gap:20px}}
+    </style>
 </head>
 <body>
 <div class="card" id="app">
-  <div class="spinner"></div>
-  <p style="margin-top:20px">Verifying invitation...</p>
-  <div class="debug" id="debug">
-    <div class="debug-title">🔍 Debug Log:</div>
-    <div>Loading...</div>
-  </div>
+    <div class="spinner"></div>
+    <p style="margin-top:20px">Verifying invitation...</p>
 </div>
 
 <script>
-  const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
-  
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  const type = urlParams.get('type');
-  const appDiv = document.getElementById('app');
-  const debugDiv = document.getElementById('debug');
-
-  function addDebug(msg, isError = false) {
-    const div = document.createElement('div');
-    div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    div.style.color = isError ? '#ff6b6b' : '#6bff6b';
-    debugDiv.appendChild(div);
-    debugDiv.scrollTop = debugDiv.scrollHeight;
-    console.log(msg);
-  }
-
-  addDebug(`Token from URL: ${token || 'NOT FOUND'}`);
-  addDebug(`Type from URL: ${type || 'NOT FOUND'}`);
-  addDebug(`Full URL: ${window.location.href}`);
-
-  async function verifyAndAccept() {
-    if (!token) {
-      addDebug('❌ No token found in URL!', true);
-      showError('No invitation token found in the link');
-      return;
-    }
-
-    addDebug(`🔍 Looking for invitation with token: ${token.substring(0, 10)}...`);
-
-    try {
-      // 1. Get invitation details
-      const { data: invite, error: inviteError } = await supabaseClient
-        .from('invitations')
-        .select('*')
-        .eq('token', token)
-        .single();
-
-      addDebug(`Query result: ${invite ? 'Found' : 'Not found'}`);
-      
-      if (inviteError) {
-        addDebug(`❌ Error: ${inviteError.message}`, true);
-        addDebug(`Error details: ${JSON.stringify(inviteError)}`, true);
-      }
-
-      if (invite) {
-        addDebug(`✅ Invitation found!`);
-        addDebug(`  - Email: ${invite.invited_email}`);
-        addDebug(`  - Inviter: ${invite.inviter_name}`);
-        addDebug(`  - Status: ${invite.status}`);
-        addDebug(`  - Expires: ${invite.expires_at}`);
-        addDebug(`  - Created: ${invite.created_at}`);
-      }
-
-      if (inviteError || !invite) {
-        showError('Invalid or expired invitation link');
-        return;
-      }
-
-      // Check if expired
-      const expiresAt = new Date(invite.expires_at);
-      const now = new Date();
-      addDebug(`Expires at: ${expiresAt}`);
-      addDebug(`Current time: ${now}`);
-      addDebug(`Is expired: ${expiresAt < now}`);
-
-      if (expiresAt < now) {
-        showError('This invitation has expired');
-        return;
-      }
-
-      // Check if already accepted
-      if (invite.status === 'accepted') {
-        addDebug(`Invitation already accepted`);
-        showSuccess(invite.inviter_name, 'You have already accepted this invitation');
-        return;
-      }
-
-      // 2. Check if user already exists
-      addDebug(`🔍 Checking if user exists: ${invite.invited_email}`);
-      const { data: existingUser, error: userError } = await supabaseClient
-        .from('profiles')
-        .select('id, email, first_name, last_name')
-        .eq('email', invite.invited_email)
-        .maybeSingle();
-
-      if (existingUser) {
-        addDebug(`✅ User exists: ${existingUser.first_name} ${existingUser.last_name}`);
-        // User exists - just accept the invitation
-        const { error: updateError } = await supabaseClient
-          .from('invitations')
-          .update({ 
-            status: 'accepted', 
-            invited_user_id: existingUser.id,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', invite.id);
-        
-        if (updateError) {
-          addDebug(`❌ Update error: ${updateError.message}`, true);
-        } else {
-          addDebug(`✅ Invitation accepted for existing user`);
-        }
-        
-        showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`);
-      } else {
-        addDebug(`ℹ️ User does not exist - showing signup form`);
-        showSignupForm(invite);
-      }
-
-    } catch (err) {
-      addDebug(`💥 FATAL ERROR: ${err.message}`, true);
-      addDebug(`Stack: ${err.stack}`, true);
-      showError('Something went wrong. Please try again.');
-    }
-  }
-
-  function showSignupForm(invite) {
-    addDebug(`📝 Rendering signup form for ${invite.invited_email}`);
+    const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
     
-    const nameParts = (invite.invited_name || '').split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const type = urlParams.get('type');
+    const appDiv = document.getElementById('app');
 
-    appDiv.innerHTML = `
-      <div style="font-size:56px">✨</div>
-      <h2>Create Your Account</h2>
-      <div class="inviter-name" style="font-size:20px;font-weight:700;color:#F4698A;margin:16px 0">${escapeHtml(invite.inviter_name || 'Someone')}</div>
-      <p style="margin-bottom:24px">has invited you to join their care team</p>
-      
-      <div class="name-row" style="display:flex;gap:16px">
-        <div class="field" style="flex:1">
-          <label>First Name *</label>
-          <input type="text" id="firstName" placeholder="First name" value="${escapeHtml(firstName)}">
-        </div>
-        <div class="field" style="flex:1">
-          <label>Last Name *</label>
-          <input type="text" id="lastName" placeholder="Last name" value="${escapeHtml(lastName)}">
-        </div>
-      </div>
-      
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="email" value="${escapeHtml(invite.invited_email)}" readonly style="background:#f5f5f5">
-      </div>
-      
-      <div class="field">
-        <label>Password *</label>
-        <input type="password" id="password" placeholder="Create a password">
-      </div>
-      
-      <div class="field">
-        <label>Confirm Password *</label>
-        <input type="password" id="confirmPassword" placeholder="Confirm your password">
-      </div>
-      
-      <button id="signupBtn">Create Account & Accept Invitation</button>
-      <button class="btn-secondary" style="background:white;color:#F4698A;border:2px solid #F4698A;margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Cancel</button>
-    `;
+    console.log('Token:', token);
+    console.log('Type:', type);
 
-    document.getElementById('signupBtn').onclick = async () => {
-      const firstName = document.getElementById('firstName').value.trim();
-      const lastName = document.getElementById('lastName').value.trim();
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
+    async function verifyAndAccept() {
+        if (!token) {
+            showError('No invitation token found');
+            return;
+        }
 
-      addDebug(`Signup attempt: ${firstName} ${lastName}`);
+        try {
+            // ✅ FIXED: Use maybeSingle() instead of single()
+            const { data: invite, error: inviteError } = await supabaseClient
+                .from('invitations')
+                .select('*')
+                .eq('token', token)
+                .maybeSingle();
 
-      if (!firstName || !lastName) {
-        alert('Please enter your first and last name');
-        return;
-      }
+            console.log('Invite data:', invite);
+            console.log('Error:', inviteError);
 
-      if (!password) {
-        alert('Please create a password');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-      }
-
-      const btn = document.getElementById('signupBtn');
-      btn.disabled = true;
-      btn.textContent = 'Creating account...';
-
-      try {
-        addDebug(`🔐 Signing up user: ${invite.invited_email}`);
-        
-        const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
-          email: invite.invited_email,
-          password: password,
-          options: {
-            data: {
-              first_name: firstName,
-              last_name: lastName,
-              role: type === 'professional' ? 'professional' : 'parent'
+            if (!invite || inviteError) {
+                showError('Invalid or expired invitation link');
+                return;
             }
-          }
-        });
 
-        if (signUpError) {
-          addDebug(`❌ Signup error: ${signUpError.message}`, true);
-          throw signUpError;
+            // Check if expired
+            const expiresAt = new Date(invite.expires_at);
+            const now = new Date();
+            
+            if (expiresAt < now) {
+                showError('This invitation has expired');
+                return;
+            }
+
+            if (invite.status !== 'pending') {
+                showError(`This invitation has already been ${invite.status}`);
+                return;
+            }
+
+            // Check if user already exists
+            const { data: existingUser } = await supabaseClient
+                .from('profiles')
+                .select('id, email, first_name, last_name')
+                .eq('email', invite.invited_email)
+                .maybeSingle();
+
+            if (existingUser) {
+                // User exists - accept invitation
+                await supabaseClient
+                    .from('invitations')
+                    .update({ 
+                        status: 'accepted', 
+                        invited_user_id: existingUser.id,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', invite.id);
+
+                showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`);
+            } else {
+                // New user - show signup form
+                showSignupForm(invite);
+            }
+
+        } catch (err) {
+            console.error('Error:', err);
+            showError('Something went wrong. Please try again.');
         }
+    }
 
-        addDebug(`✅ User created: ${authData.user.id}`);
-        
-        // Wait for profile trigger
-        addDebug(`⏳ Waiting for profile to be created...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    function showSignupForm(invite) {
+        const nameParts = (invite.invited_name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
 
-        // Mark invitation as accepted
-        addDebug(`📝 Updating invitation status...`);
-        const { error: updateError } = await supabaseClient
-          .from('invitations')
-          .update({ 
-            status: 'accepted', 
-            invited_user_id: authData.user.id,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', invite.id);
+        appDiv.innerHTML = `
+            <div style="font-size:56px">✨</div>
+            <h2>Create Your Account</h2>
+            <div style="font-size:20px;font-weight:700;color:#F4698A;margin:16px 0">${escapeHtml(invite.inviter_name || 'Someone')}</div>
+            <p style="margin-bottom:24px">has invited you to join their care team</p>
+            
+            <div class="name-row">
+                <div class="field">
+                    <label>First Name *</label>
+                    <input type="text" id="firstName" placeholder="First name" value="${escapeHtml(firstName)}">
+                </div>
+                <div class="field">
+                    <label>Last Name *</label>
+                    <input type="text" id="lastName" placeholder="Last name" value="${escapeHtml(lastName)}">
+                </div>
+            </div>
+            
+            <div class="field">
+                <label>Email</label>
+                <input type="email" id="email" value="${escapeHtml(invite.invited_email)}" readonly style="background:#f5f5f5">
+            </div>
+            
+            <div class="field">
+                <label>Password *</label>
+                <input type="password" id="password" placeholder="Create a password">
+            </div>
+            
+            <div class="field">
+                <label>Confirm Password *</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password">
+            </div>
+            
+            <button id="signupBtn">Create Account & Accept Invitation</button>
+            <button class="btn-secondary" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Cancel</button>
+        `;
 
-        if (updateError) {
-          addDebug(`❌ Update error: ${updateError.message}`, true);
-        } else {
-          addDebug(`✅ Invitation accepted!`);
-        }
+        document.getElementById('signupBtn').onclick = async () => {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
 
-        showSuccess(invite.inviter_name, `${firstName} ${lastName}`);
+            if (!firstName || !lastName) {
+                alert('Please enter your first and last name');
+                return;
+            }
 
-      } catch (err) {
-        addDebug(`💥 Error: ${err.message}`, true);
-        alert('Error: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = 'Create Account & Accept Invitation';
-      }
-    };
-  }
+            if (!password) {
+                alert('Please create a password');
+                return;
+            }
 
-  function showSuccess(inviterName, userName) {
-    addDebug(`🎉 Success! ${userName} connected with ${inviterName}`);
-    appDiv.innerHTML = `
-      <div style="font-size:64px">🎉</div>
-      <h2>Successfully Connected!</h2>
-      <div class="success" style="background:#E8F8F0;padding:20px;border-radius:20px;margin:24px 0">
-        ✅ ${escapeHtml(userName)} is now connected with <strong>${escapeHtml(inviterName)}</strong>
-      </div>
-      <p style="margin:16px 0;color:#666;">You can now share updates, messages, and track progress together.</p>
-      <button onclick="window.location.href='doulalink://app'">Open App</button>
-      <button class="btn-secondary" style="background:white;color:#F4698A;border:2px solid #F4698A;margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Continue to Web</button>
-    `;
-  }
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
 
-  function showError(message) {
-    addDebug(`❌ Showing error: ${message}`, true);
-    appDiv.innerHTML = `
-      <div style="font-size:64px">❌</div>
-      <h2>Invitation Error</h2>
-      <div class="error" style="background:#FFEBEE;color:#c0392b;padding:15px;border-radius:16px;margin:16px 0;border-left:4px solid #EF4444;font-size:14px;text-align:left">
-        ${escapeHtml(message)}
-      </div>
-      <p style="color:#666; margin-top:16px;">Please contact the person who invited you for a new link.</p>
-      <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go to Homepage</button>
-    `;
-  }
+            const btn = document.getElementById('signupBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
 
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+            try {
+                const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
+                    email: invite.invited_email,
+                    password: password,
+                    options: {
+                        data: {
+                            first_name: firstName,
+                            last_name: lastName,
+                            role: type === 'professional' ? 'professional' : 'parent'
+                        }
+                    }
+                });
 
-  // Start verification
-  verifyAndAccept();
+                if (signUpError) throw signUpError;
+
+                // Wait for profile to be created
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Mark invitation as accepted
+                await supabaseClient
+                    .from('invitations')
+                    .update({ 
+                        status: 'accepted', 
+                        invited_user_id: authData.user.id,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', invite.id);
+
+                showSuccess(invite.inviter_name, `${firstName} ${lastName}`);
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Create Account & Accept Invitation';
+            }
+        };
+    }
+
+    function showSuccess(inviterName, userName) {
+        appDiv.innerHTML = `
+            <div style="font-size:64px">🎉</div>
+            <h2>Successfully Connected!</h2>
+            <div class="success">
+                ✅ ${escapeHtml(userName)} is now connected with <strong>${escapeHtml(inviterName)}</strong>
+            </div>
+            <p style="margin:16px 0;color:#666;">You can now share updates, messages, and track progress together.</p>
+            <button onclick="window.location.href='doulalink://app'">Open App</button>
+            <button class="btn-secondary" style="margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Continue to Web</button>
+        `;
+    }
+
+    function showError(message) {
+        appDiv.innerHTML = `
+            <div style="font-size:64px">❌</div>
+            <h2>Invitation Error</h2>
+            <div class="error">${escapeHtml(message)}</div>
+            <p style="color:#666; margin-top:16px;">Please contact the person who invited you for a new link.</p>
+            <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go to Homepage</button>
+        `;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Start verification
+    verifyAndAccept();
 </script>
 </body>
 </html>
