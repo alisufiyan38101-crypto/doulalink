@@ -22,7 +22,6 @@
         .name-row{display:flex;gap:16px}
         .name-row .field{flex:1}
         @media (max-width:480px){.name-row{flex-direction:column;gap:20px}}
-        .hidden{display:none}
         .info-box{background:#F0F4FF;padding:12px;border-radius:12px;margin-bottom:20px;text-align:left;font-size:14px}
         .info-box strong{color:#F4698A}
     </style>
@@ -40,11 +39,9 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
-    const type = urlParams.get('type');
     const appDiv = document.getElementById('app');
 
     console.log('Token:', token);
-    console.log('Type:', type);
 
     async function verifyAndAccept() {
         if (!token) {
@@ -53,7 +50,6 @@
         }
 
         try {
-            // Using maybeSingle() instead of single() to avoid "no rows" error
             const { data: invite, error: inviteError } = await supabaseClient
                 .from('invitations')
                 .select('*')
@@ -63,52 +59,39 @@
             console.log('Invite data:', invite);
             console.log('Error:', inviteError);
 
-            // Check if invite exists
             if (!invite) {
-                console.log('No invite found for token:', token);
-                showError('Invalid or expired invitation link. Please request a new invitation.');
+                showError('Invalid or expired invitation link');
                 return;
             }
 
             if (inviteError) {
-                console.error('Database error:', inviteError);
                 showError('System error. Please try again later.');
                 return;
             }
 
-            // Check if expired
             const expiresAt = new Date(invite.expires_at);
             const now = new Date();
             
             if (expiresAt < now) {
-                showError('This invitation has expired. Please ask for a new invitation link.');
+                showError('This invitation has expired');
                 return;
             }
 
-            // Check status
             if (invite.status !== 'pending') {
-                if (invite.status === 'accepted') {
-                    showError('This invitation has already been accepted. You can login to your account.');
-                } else if (invite.status === 'declined') {
-                    showError('This invitation was declined. Please contact the inviter for a new link.');
-                } else {
-                    showError(`This invitation has already been ${invite.status}.`);
-                }
+                showError(`This invitation has already been ${invite.status}`);
                 return;
             }
 
-            // Check if user already exists with this email
-            const { data: existingUser, error: userError } = await supabaseClient
+            const { data: existingUser } = await supabaseClient
                 .from('profiles')
                 .select('id, email, first_name, last_name')
                 .eq('email', invite.invited_email)
                 .maybeSingle();
 
             if (existingUser) {
-                // User already exists - just accept the invitation
                 console.log('Existing user found:', existingUser);
                 
-                // ✅ FIXED: No invited_user_id column
+                // ✅ UPDATED: No invited_user_id column
                 const { error: updateError } = await supabaseClient
                     .from('invitations')
                     .update({ 
@@ -125,23 +108,19 @@
 
                 showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`, true);
             } else {
-                // New user - show signup form
                 showSignupForm(invite);
             }
 
         } catch (err) {
-            console.error('Unexpected error:', err);
-            showError('Something went wrong. Please try again or contact support.');
+            console.error('Error:', err);
+            showError('Something went wrong. Please try again.');
         }
     }
 
     function showSignupForm(invite) {
-        // Extract name from invited_name or use empty strings
         const nameParts = (invite.invited_name || '').split(' ');
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
-
-        // Determine display role
         const roleDisplay = invite.type === 'professional' ? 'Professional' : 'Family Member';
 
         appDiv.innerHTML = `
@@ -213,7 +192,6 @@
             btn.textContent = 'Creating account...';
 
             try {
-                // Sign up the user
                 const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
                     email: invite.invited_email,
                     password: password,
@@ -228,14 +206,9 @@
 
                 if (signUpError) throw signUpError;
 
-                if (!authData.user) {
-                    throw new Error('Failed to create user account');
-                }
-
-                // Wait a moment for the profile to be created by database trigger
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // ✅ FIXED: No invited_user_id column
+                // ✅ UPDATED: No invited_user_id column
                 const { error: updateError } = await supabaseClient
                     .from('invitations')
                     .update({ 
@@ -246,13 +219,11 @@
 
                 if (updateError) {
                     console.error('Failed to update invitation:', updateError);
-                    // Still show success but log error
                 }
 
                 showSuccess(invite.inviter_name, `${firstName} ${lastName}`, false);
 
             } catch (err) {
-                console.error('Signup error:', err);
                 alert('Error creating account: ' + err.message);
                 btn.disabled = false;
                 btn.textContent = 'Create Account & Accept Invitation';
@@ -272,8 +243,7 @@
                 ✅ ${message}
             </div>
             <p style="margin:16px 0;color:#666;">You can now share updates, messages, and track progress together.</p>
-            <button onclick="handleOpenApp()">Open App</button>
-            <button class="btn-secondary" style="margin-top:12px" onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Continue to Web</button>
+            <button onclick="window.location.href='https://doulalink.doulalink-web.workers.dev'">Go to Dashboard</button>
         `;
     }
 
@@ -287,16 +257,6 @@
         `;
     }
 
-    function handleOpenApp() {
-        // Try to open the mobile app first
-        window.location.href = 'doulalink://app';
-        
-        // Fallback to web after 2 seconds if app doesn't open
-        setTimeout(() => {
-            window.location.href = 'https://doulalink.doulalink-web.workers.dev';
-        }, 2000);
-    }
-
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -304,7 +264,6 @@
         return div.innerHTML;
     }
 
-    // Start verification
     verifyAndAccept();
 </script>
 </body>
