@@ -54,11 +54,24 @@
             return false;
         }
         
-        // Check if connection already exists in connected_users
+        // Order IDs alphabetically to satisfy the constraint
+        let userA, userB;
+        if (invitedUserId < inviterUserId) {
+            userA = invitedUserId;
+            userB = inviterUserId;
+        } else {
+            userA = inviterUserId;
+            userB = invitedUserId;
+        }
+        
+        console.log('Ordered as - user_a:', userA, 'user_b:', userB);
+        
+        // Check if connection already exists
         const { data: existingConnection, error: checkError } = await supabaseClient
             .from('connected_users')
             .select('id')
-            .or(`and(user_id.eq.${invitedUserId},connected_user_id.eq.${inviterUserId}),and(user_id.eq.${inviterUserId},connected_user_id.eq.${invitedUserId})`)
+            .eq('user_a', userA)
+            .eq('user_b', userB)
             .maybeSingle();
         
         if (existingConnection) {
@@ -66,28 +79,14 @@
             return true;
         }
         
-        const connectionType = invite.type === 'professional' ? 'professional' : 'family';
-        const now = new Date().toISOString();
-        
-        // Create bidirectional connections in connected_users table
-        const { data: connections, error: connectionError } = await supabaseClient
+        // Create single connection record (ordered correctly)
+        const { data: connection, error: connectionError } = await supabaseClient
             .from('connected_users')
-            .insert([
-                {
-                    user_id: invitedUserId,
-                    connected_user_id: inviterUserId,
-                    connection_type: connectionType,
-                    status: 'active',
-                    created_at: now
-                },
-                {
-                    user_id: inviterUserId,
-                    connected_user_id: invitedUserId,
-                    connection_type: connectionType,
-                    status: 'active',
-                    created_at: now
-                }
-            ])
+            .insert({
+                user_a: userA,
+                user_b: userB,
+                connected_at: new Date().toISOString()
+            })
             .select();
         
         if (connectionError) {
@@ -95,7 +94,7 @@
             return false;
         }
         
-        console.log('Connections created successfully in connected_users:', connections);
+        console.log('Connection created successfully in connected_users:', connection);
         return true;
     }
 
@@ -161,12 +160,8 @@
                     return;
                 }
                 
-                // Create connection between users in connected_users table
-                const connectionCreated = await createConnection(invite, existingUser.id, invite.invited_by);
-                
-                if (!connectionCreated) {
-                    console.warn('Connection was not created, but invitation was accepted');
-                }
+                // Create connection between users
+                await createConnection(invite, existingUser.id, invite.invited_by);
                 
                 showSuccess(invite.inviter_name, `${existingUser.first_name} ${existingUser.last_name}`, true);
             } else {
@@ -282,12 +277,8 @@
                     console.error('Failed to update invitation:', updateError);
                 }
                 
-                // Create connection between users in connected_users table
-                const connectionCreated = await createConnection(invite, authData.user.id, invite.invited_by);
-                
-                if (!connectionCreated) {
-                    console.warn('Connection was not created, but account was created');
-                }
+                // Create connection between users
+                await createConnection(invite, authData.user.id, invite.invited_by);
 
                 showSuccess(invite.inviter_name, `${firstName} ${lastName}`, false);
 
