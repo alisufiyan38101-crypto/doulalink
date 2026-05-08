@@ -146,4 +146,164 @@
 
 <script>
   const SUPABASE_URL = 'https://bwohpddanrdfaxwkbgoa.supabase.co';
-  const SUPABASE_AN
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3b2hwZGRhbnJkZmF4d2tiZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTk1MjgsImV4cCI6MjA4ODc5NTUyOH0.YOzp7mJR6FcwZ2dgVfqXDuNfVPudV6ijCFvhUbDG6wY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  let pendingInvitations = [];
+
+  function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function showError(message) {
+    document.getElementById('errorMsg').textContent = message;
+    document.getElementById('errorBox').classList.add('show');
+    setTimeout(() => {
+      document.getElementById('errorBox').classList.remove('show');
+    }, 5000);
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('show');
+  }
+
+  function showSuccess(title, message) {
+    document.getElementById('successTitle').textContent = title;
+    document.getElementById('successText').textContent = message;
+    document.getElementById('successBox').classList.add('show');
+    setTimeout(() => {
+      document.getElementById('successBox').classList.remove('show');
+    }, 4000);
+  }
+
+  function setLoading(loading) {
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = loading;
+    document.getElementById('btnLabel').style.display = loading ? 'none' : 'inline';
+    document.getElementById('btnSpinner').style.display = loading ? 'block' : 'none';
+  }
+
+  async function checkPendingInvitations(userId, userEmail) {
+    const { data: invites, error } = await sb
+      .from('invitations')
+      .select('*')
+      .eq('invited_email', userEmail)
+      .eq('status', 'pending');
+    
+    if (error) {
+      console.error('Error checking invitations:', error);
+      return [];
+    }
+    
+    return invites || [];
+  }
+
+  async function acceptInvitationAndCreateConnection(invite, currentUserId) {
+    // Get inviter's profile ID
+    const { data: inviterProfile } = await sb
+      .from('profiles')
+      .select('id')
+      .eq('email', invite.inviter_email)
+      .maybeSingle();
+    
+    if (!inviterProfile) {
+      console.error('Inviter profile not found');
+      return;
+    }
+    
+    // Update invitation status
+    await sb
+      .from('invitations')
+      .update({ status: 'accepted', updated_at: new Date().toISOString() })
+      .eq('id', invite.id);
+    
+    // Create connection in connected_users table
+    const [userA, userB] = [inviterProfile.id, currentUserId].sort();
+    
+    const { error: connectionError } = await sb
+      .from('connected_users')
+      .upsert({
+        user_a: userA,
+        user_b: userB,
+        connected_at: new Date().toISOString()
+      }, { onConflict: 'user_a,user_b' });
+    
+    if (connectionError) {
+      console.error('Error creating connection:', connectionError);
+    } else {
+      console.log('✅ Connection created between users');
+      showSuccess('Connected!', `You are now connected with ${invite.inviter_name}`);
+    }
+  }
+
+  async function handleLogin() {
+    hideError();
+    
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+      showError('Please enter both email and password');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        // Check for pending invitations
+        const pendingInvites = await checkPendingInvitations(data.user.id, email);
+        
+        if (pendingInvites.length > 0) {
+          showSuccess('Invitations Found!', `You have ${pendingInvites.length} pending invitation(s). Accepting now...`);
+          
+          // Accept all pending invitations
+          for (const invite of pendingInvites) {
+            await acceptInvitationAndCreateConnection(invite, data.user.id);
+          }
+        }
+        
+        showSuccess('Welcome back!', `Logged in as ${data.user.email}`);
+        
+        // Redirect to app
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      }
+      
+    } catch (err) {
+      console.error('Login error:', err);
+      let errorMsg = err.message || 'Login failed';
+      if (errorMsg.includes('Invalid login')) {
+        errorMsg = 'Invalid email or password. Please try again.';
+      } else if (errorMsg.includes('Email not confirmed')) {
+        errorMsg = 'Please verify your email before logging in. Check your inbox.';
+      }
+      showError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  // Auto-fill email from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const preEmail = urlParams.get('email');
+  if (preEmail) {
+    document.getElementById('email').value = decodeURIComponent(preEmail);
+  }
+  
+  // Enter key support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+</body>
+</html>
